@@ -8,19 +8,21 @@
 #include <Poco/HashMap.h>
 #include <iostream>
 #include <string>
+#include "interface/ConfigManager.h"
+
 
 using namespace Poco::Net;
 using namespace Poco;
 using namespace std;
 
+
 int main(int argc, char **argv)
 {
-  typedef HashMap<string,string> ConfigMap;
-  ConfigMap config;
-
-  config.insert(ConfigMap::ValueType("key","value"));
-  ConfigMap::Iterator it = config.find("key");
-  cout<<"My Iterator's First:"<<it->first<<" Second:"<<it->second<<endl;
+  /*const string* res = Swift::ConfigManager::getProperty("fuck");
+  if(res == "NULL")
+    cout<<"NULLLL";
+  else
+    cout<<"Before:"<<res<<"\tINJAAAAAAA";;*/
 
   if (argc != 2)
   {

@@ -1,1 +1,0 @@
-./configure --config=Linux --omit=Data/ODBC,Data/MySQL,Zip,NetSSL_OpenSSL,Crypto  --no-tests --no-samples --no-wstring --static

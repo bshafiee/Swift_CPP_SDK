@@ -1,21 +1,22 @@
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0
+#CXXFLAGS =	-O3 -g -Wall -fmessage-length=0 -std=c++11
+CXXFLAGS = -g -Wall -fmessage-length=0 -std=c++11
 CFLAGS = -Wno-address -Wno-char-subscripts # -Wno-sign-compare
 
-#HTTPXX=$(wildcard httpxx/*.cpp)
+SWIFT=$(wildcard interface/*.cpp)
 TEST=test.cpp
-CXXSOURCES=$(HTTPXX) $(TEST)
+CXXSOURCES=$(SWIFT) $(TEST)
 #CSOURCES=httpxx/http_parser.c
 
 CXXOBJS=$(CXXSOURCES:%.cpp=%.o)
 #COBJS=$(CSOURCES:%.c=%.o)
 
 #Includes
-LFLAGS=-IUtils/poco/include
+LFLAGS=-Iutils/poco/include
 CXXFLAGS+= $(LFLAGS)
 
 #Libraries
 #LD = -static -LUtils/poco/lib
-LD = -LUtils/poco/lib
+LD = -Lutils/poco/lib
 CXXFLAGS+=$(LD)
 
 LIBS =-lPocoUtild -lPocoUtil -lPocoXML -lPocoNet -lPocoNetd -lPocoFoundation -lPocoXMLd -lPocoFoundationd -lpthread
