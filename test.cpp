@@ -1,63 +1,98 @@
+#include <Poco/Net/SocketAddress.h>
+#include <Poco/Net/StreamSocket.h>
+#include <Poco/Net/SocketStream.h>
 #include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
 #include <Poco/StreamCopier.h>
-#include <Poco/Path.h>
-#include <Poco/URI.h>
-#include <Poco/Exception.h>
-#include <Poco/HashMap.h>
+#include <json/json.h>
 #include <iostream>
-#include <string>
-#include "interface/ConfigManager.h"
+#include "io/HTTPIO.h"
 
 
 using namespace Poco::Net;
 using namespace Poco;
 using namespace std;
 
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-  /*const string* res = Swift::ConfigManager::getProperty("fuck");
-  if(res == "NULL")
-    cout<<"NULLLL";
-  else
-    cout<<"Before:"<<res<<"\tINJAAAAAAA";;*/
+  /*Poco::Net::SocketAddress sa("www.appinf.com", 80);
+  Poco::Net::StreamSocket socket(sa);
+  Poco::Net::SocketStream str(socket);*/
 
-  if (argc != 2)
+  /*HTTPClientSession session("www.google.com");
+  HTTPRequest request(HTTPRequest::HTTP_GET);
+  session.sendRequest(request);
+
+  HTTPResponse response;
+  std::istream& rs = session.receiveResponse(response);
+  StreamCopier::copyStream(rs,std::cout);
+
+
+  Json::Value root;
+  Json::Reader reader;
+  const char *temp = "{\"firstName\": \"John\",\"lastName\": \"Smith\"}";
+  reader.parse(temp,root,false);
+  std::string encoding = root.get("firstName", "Not Found" ).asString();
+  std::cout<<std::endl<<encoding<<std::endl;
+
+  Json::Value mydoc;
+  Json::Value mydoc2;
+  mydoc2["key1"] = "sdfsdf";
+  //key1 {"sdfds",{"ssf"}}
+
+  mydoc["key1"] = {};
+  mydoc["key1"]["name"] = "jafar";
+  mydoc["key2"] = "value 2";
+  mydoc["key3"]["key3_1"] = "value 1_1";
+  mydoc["key3"]["key31"] = "value 1_1";
+  mydoc["key1"]["sdf"] = "sdfsdf";
+  Json::StyledWriter writer;
+  // Make a new JSON document for the configuration. Preserve original comments.
+  std::string outputConfig = writer.write( mydoc );
+
+  // And you can write to a stream, using the StyledWriter automatically.
+  std::cout << mydoc;
+  */
+
+  /*
+    {
+      "auth":
+        {
+          "tenantName": "BehroozProject",
+          "passwordCredentials":
+            {
+              "username": "behrooz",
+              "password": "behrooz"
+            }
+        }
+    }
+   */
+  Json::Value jReq;
+  Json::Value auth;
+  auth["tenantName"] = "BehroozProject";
+  auth["passwordCredentials"]["username"] = "behrooz";
+  auth["passwordCredentials"]["password"] = "behrooz";
+  jReq ["auth"] = auth;
+  Json::FastWriter writer;
+
+  string url = "http://192.168.249.109/v2.0/tokens";
+  int port = 5000;
+  string req = writer.write(jReq);
+  string contentType = "application/json";
+  HTTPClientSession *session = Swift::HTTPIO::doPost(url,port,req,contentType);
+  HTTPResponse response;
+  istream& rs = session->receiveResponse(response);
+  //StreamCopier::copyStream(rs,std::cout);
+  Json::Value root;   // will contains the root value after parsing.
+  Json::Reader reader;
+  bool parsingSuccessful = reader.parse(rs,root,true);
+  if ( !parsingSuccessful )
   {
-    cout << "Usage: " << argv[0] << " <uri>" << endl;
-    cout << "       fetches the resource identified by <uri> and print it" << endl;
-    return -1;
+      // report to the user the failure and their locations in the document.
+      std::cout  << "Failed to parse configuration\n"
+                 << reader.getFormattedErrorMessages()<<"\nInput:"<<response.getStatus()<<"\t"<<response.getReason();
+      StreamCopier::copyStream(rs,std::cout);
   }
-
-  try
-  {
-    // prepare session
-    URI uri(argv[1]);
-    HTTPClientSession session(uri.getHost(), uri.getPort());
-
-    // prepare path
-    string path(uri.getPathAndQuery());
-    if (path.empty()) path = "/";
-
-    // send request
-    HTTPRequest req(HTTPRequest::HTTP_GET, path, HTTPMessage::HTTP_1_1);
-    session.sendRequest(req);
-
-    // get response
-    HTTPResponse res;
-    cout << res.getStatus() << " " << res.getReason() << endl;
-
-    // print response
-    istream &is = session.receiveResponse(res);
-    StreamCopier::copyStream(is, cout);
-  }
-  catch (Exception &ex)
-  {
-    cerr << ex.displayText() << endl;
-    return -1;
-  }
-
-  return 0;
+  cout<<root.toStyledString()<<endl;
 }
