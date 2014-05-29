@@ -10,12 +10,81 @@
 
 #include "Access.h"
 #include "Tenant.h"
+#include "AuthenticationMethod.h"
 #include <iostream>
 #include <vector>
 
 namespace Swift {
 
+/** Associated roles with this account **/
+struct Role;
+
 class Account {
+private:
+
+  /**
+   * ObjectStore tenant
+   */
+  Tenant *tenant;
+
+  /**
+   * The ObjectStore username
+   */
+  std::string username;
+
+  /**
+   * The ObjectStore password
+   */
+  std::string password;
+
+  /**
+   * The ObjectStore authentication URL (Keystone)
+   */
+  std::string authUrl;
+
+  /**
+   * ObjectStore tokens expire after 24 hours. If reauthentication is allowed (default behaviour),
+   * after expiration, Account will reauthenticate itself and get a new authentication token. If
+   * reauthentication is turned off, you will have to manually arrange reauthentication. This mode
+   * is recommended for web servers or otherwise long-living processes.
+   */
+  bool allowReauthenticate = true;
+
+  /**
+   * Public url to interact with ObjectStore
+   */
+  std::string publicHost;
+
+  /**
+   * The preferred region will determine what Swift end-point will be chosen. If no preferred region is
+   * set (default), the first applicable end-point will be selected.
+   */
+  std::string preferredRegion;
+
+  /**
+   * The delimiter is used to check for directory boundaries. The default will be a '/'.
+   */
+  char delimiter = '/';
+
+  /**
+   * The method of authentication. Various options:
+   * <ul>
+   *     <li>
+   *         <b>BASIC</b>; authenticate against Swift itself. Authentication URL, username and password
+   *         must be passed.
+   *     </li>
+   *     <li>
+   *         <b>TEMPAUTH</b>; authenticate against Swift itself. Authentication URL, username and password
+   *         must be passed.
+   *     </li>
+   *     <li>
+   *         <b>KEYSTONE</b> (default); makes use of OpenStack Compute. Authentication URL, username and
+   *         password must be passed. Ideally, tenant ID and/or name are passed as well. API can auto-
+   *         discover the tenant if none is passed and if it can be resolved (one tenant for user).
+   *     </li>
+   * </ul>
+   */
+  AuthenticationMethod authenticationMethod = AuthenticationMethod::KEYSTONE;
 
 public:
   virtual ~Account();
@@ -28,18 +97,6 @@ public:
    * @return the access element including a new token
    */
   Access authenticate();
-
-  /**
-   * Returns the URL which is used for the underlying stored objects
-   * @return the URL of the underlying stored objects
-   */
-  std::string getPublicURL();
-
-  /**
-   * Returns the private URL which is used for the underlying stored objects
-   * @return the private URL of the underlying stored objects
-   */
-  std::string &getPrivateURL();
 
   /**
    * Force the Account to reload its metadata
@@ -111,7 +168,7 @@ public:
    * Saves the password to the Account. The password will be used to create server side hashes. This is required for
    * TempURL (both GET and PUT). The server will match a generated hash against the hash that is passed in a
    * tempURL. If identical, it passed the first test. Note that if password is not set, TempURLs will not work.
-   * Note that the password saved is the one set either in AccountConfig, or set with Account.setHashPassword(String).
+   * Note that the password saved is the one set either in AccountConfig, or set with Account.setHashPassword(std::string).
    * @param hashPassword the password to use for generating the hashes
    */
   Account setHashPassword(const std::string &hashPassword);
@@ -120,7 +177,7 @@ public:
    * Returns the hash password originally set on Account.
    * @return hash password
    */
-  const std::string &getHashPassword();
+  const std::string getHashPassword();
 
   /**
    * Empties the Container Cache
