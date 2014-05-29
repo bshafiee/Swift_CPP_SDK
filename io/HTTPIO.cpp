@@ -9,13 +9,17 @@
 
 namespace Swift {
 
+using namespace std;
+using namespace Poco::Net;
+using namespace Poco;
 
 HTTPClientSession* HTTPIO::doGet(const string &url, uint port,
     const HTTPParamMap *params) {
   URI uri(url);
-    uri.setPort(port);
-    HTTPClientSession *session = new HTTPClientSession(uri.getHost(),uri.getPort());
-    HTTPRequest request(HTTPRequest::HTTP_GET,uri.getPath());
+  uri.setPort(port);
+  Poco::Net::HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
+      uri.getPort());
+  Poco::Net::HTTPRequest request(HTTPRequest::HTTP_GET, uri.getPath());
   //Add params
   if (params != nullptr) {
     HTTPParamMap::ConstIterator it = params->begin();
@@ -27,12 +31,13 @@ HTTPClientSession* HTTPIO::doGet(const string &url, uint port,
   return session;
 }
 
-HTTPClientSession* HTTPIO::doPost(const string &url, uint port,
+Poco::Net::HTTPClientSession* HTTPIO::doPost(const string &url, uint port,
     const HTTPParamMap *params) {
   URI uri(url);
-    uri.setPort(port);
-    HTTPClientSession *session = new HTTPClientSession(uri.getHost(),uri.getPort());
-    HTTPRequest request(HTTPRequest::HTTP_POST,uri.getPath());
+  uri.setPort(port);
+  HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
+      uri.getPort());
+  HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath());
   //Add params
   if (params != nullptr) {
     HTTPParamMap::ConstIterator it = params->begin();
@@ -47,8 +52,9 @@ HTTPClientSession* HTTPIO::doPost(const string &url, uint port,
     const string &reqBody, const string &contentType) {
   URI uri(url);
   uri.setPort(port);
-  HTTPClientSession *session = new HTTPClientSession(uri.getHost(),uri.getPort());
-  HTTPRequest request(HTTPRequest::HTTP_POST,uri.getPath());
+  HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
+      uri.getPort());
+  HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath());
   //Set Content Type
   request.setContentLength(reqBody.size());
   request.setContentType(contentType);

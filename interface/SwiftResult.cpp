@@ -9,12 +9,14 @@
 
 namespace Swift {
 
-SwiftResult::SwiftResult() {
-  // TODO Auto-generated constructor stub
-
+template<class T>
+SwiftResult<T>::SwiftResult() :
+    error(SwiftError::SWIFT_FAIL, "Unknown error"),
+    payload(nullptr) {
 }
 
-SwiftResult::~SwiftResult() {
+template<class T>
+SwiftResult<T>::~SwiftResult() {
   // TODO Auto-generated destructor stub
 }
 

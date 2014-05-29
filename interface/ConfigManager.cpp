@@ -21,12 +21,12 @@ const string* ConfigManager::getProperty(ConfigKey key) {
 
 int ConfigManager::putProperty(ConfigKey key, const string &value) {
   config.insert(ConfigMap::ValueType(key, value));
-  return SWIFT_OK;
+  return SwiftError::SWIFT_OK;
 }
 
 int ConfigManager::removeProperty(ConfigKey key) {
   config.erase(key);
-  return SWIFT_OK;
+  return SwiftError::SWIFT_OK;
 }
 
 ConfigManager::ConfigMap::Iterator beginIterator() {
