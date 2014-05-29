@@ -101,7 +101,7 @@ public:
    * has expired and AbstractSecureCommand triggers a re-authentication.
    * @return the access element including a new token
    */
-  SwiftResult<bool> authenticate(std::string username, std::string password,
+  SwiftResult<Account*> authenticate(std::string username, std::string password,
       std::string authUrl, bool allowReauthenticate=true, std::string tenant = "");
 
   /**
