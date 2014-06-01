@@ -89,7 +89,7 @@ private:
   /**
    * Number of calls made to Object Store
    */
-  ulong numOfCalls;
+  static ulong numOfCalls;
 
 public:
   virtual ~Account();
@@ -101,8 +101,8 @@ public:
    * has expired and AbstractSecureCommand triggers a re-authentication.
    * @return the access element including a new token
    */
-  SwiftResult<Account*> authenticate(std::string username, std::string password,
-      std::string authUrl, bool allowReauthenticate=true, std::string tenant = "");
+  static SwiftResult<Account*>* authenticate(const std::string &_username, const std::string &_password,
+      const std::string &_authUrl, bool _allowReauthenticate=true, const std::string &_tenantName = "");
 
   /**
    * The number of bytes stored by the StoredObjects in all Containers in the Account.
@@ -141,14 +141,14 @@ public:
   /**
    * Increase the call counter which tracks how many calls are made to the ObjectStore
    */
-  void increaseCallCounter();
+  static ulong increaseCallCounter();
 
   /**
    * Returns the number of HTTP calls that have been made to the ObjectStore server. This could be
    * useful to check the efficiency of the methods and configuration in use
    * @return number of calls made to the ObjectStore server
    */
-  int getNumberOfCalls();
+  static ulong getNumberOfCalls();
 
   /**
    * Returns the tenants of the account. Note that this is the only Account method that interacts with the object

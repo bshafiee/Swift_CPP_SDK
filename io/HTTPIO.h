@@ -28,7 +28,7 @@ public:
   typedef Poco::HashMap<std::string, std::string> HTTPParamMap;
   static Poco::Net::HTTPClientSession* doGet (const std::string &url,uint port,const HTTPParamMap *params);
   static Poco::Net::HTTPClientSession* doPost(const std::string &url,uint port,const HTTPParamMap *params);
-  static Poco::Net::HTTPClientSession* doPost(const std::string &url,uint port,const std::string &reqBody, const std::string &contentType);
+  static Poco::Net::HTTPClientSession* doPost(const std::string &uri,const std::string &reqBody, const std::string &contentType);
 };
 
 } /* namespace Swift */

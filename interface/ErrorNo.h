@@ -31,6 +31,9 @@ struct SwiftError {
   /** List of Errors **/
   static const int SWIFT_OK = 0; //Successful
   static const int SWIFT_FAIL = -1; //Unsuccessful
+  static const int SWIFT_EXCEPTION = -2; //Exception happened
+  static const int SWIFT_HTTP_ERROR = -3; //HTTP erro happened
+  static const int SWIFT_JSON_PARSE_ERROR = -3; //JSON Parsing Error happened
 };
 
 }

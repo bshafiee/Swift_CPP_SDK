@@ -31,9 +31,9 @@ HTTPClientSession* HTTPIO::doGet(const string &url, uint port,
   return session;
 }
 
-Poco::Net::HTTPClientSession* HTTPIO::doPost(const string &url, uint port,
+Poco::Net::HTTPClientSession* HTTPIO::doPost(const string &_uri, uint port,
     const HTTPParamMap *params) {
-  URI uri(url);
+  URI uri(_uri);
   uri.setPort(port);
   HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
       uri.getPort());
@@ -48,10 +48,10 @@ Poco::Net::HTTPClientSession* HTTPIO::doPost(const string &url, uint port,
   return session;
 }
 
-HTTPClientSession* HTTPIO::doPost(const string &url, uint port,
-    const string &reqBody, const string &contentType) {
+HTTPClientSession* HTTPIO::doPost(const string &url, const string &reqBody,
+    const string &contentType) {
   URI uri(url);
-  uri.setPort(port);
+  //uri.setPort(port);
   HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
       uri.getPort());
   HTTPRequest request(HTTPRequest::HTTP_POST, uri.getPath());

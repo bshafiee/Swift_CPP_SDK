@@ -8,11 +8,13 @@
 #include <json/json.h>
 #include <iostream>
 #include "io/HTTPIO.h"
+#include "model/Account.h"
 
 
 using namespace Poco::Net;
 using namespace Poco;
 using namespace std;
+using namespace Swift;
 
 int main(int argc, char** argv)
 {
@@ -68,31 +70,7 @@ int main(int argc, char** argv)
         }
     }
    */
-  Json::Value jReq;
-  Json::Value auth;
-  auth["tenantName"] = "BehroozProject";
-  auth["passwordCredentials"]["username"] = "behrooz";
-  auth["passwordCredentials"]["password"] = "behrooz";
-  jReq ["auth"] = auth;
-  Json::FastWriter writer;
-
-  string url = "http://192.168.249.109/v2.0/tokens";
-  int port = 5000;
-  string req = writer.write(jReq);
-  string contentType = "application/json";
-  HTTPClientSession *session = Swift::HTTPIO::doPost(url,port,req,contentType);
-  HTTPResponse response;
-  istream& rs = session->receiveResponse(response);
-  //StreamCopier::copyStream(rs,std::cout);
-  Json::Value root;   // will contains the root value after parsing.
-  Json::Reader reader;
-  bool parsingSuccessful = reader.parse(rs,root,true);
-  if ( !parsingSuccessful )
-  {
-      // report to the user the failure and their locations in the document.
-      std::cout  << "Failed to parse configuration\n"
-                 << reader.getFormattedErrorMessages()<<"\nInput:"<<response.getStatus()<<"\t"<<response.getReason();
-      StreamCopier::copyStream(rs,std::cout);
-  }
-  cout<<root.toStyledString()<<endl;
+  Account* account = new Account();
+  account->authenticate("behrooz","behrooz","sldfj",true,"lsjf");
+  //account->increaseCallCounter();
 }
