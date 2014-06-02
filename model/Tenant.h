@@ -24,8 +24,8 @@ public:
   Tenant();
   Tenant(const std::string &_id, const std::string &_name, const std::string &_description, bool _enabled);
   virtual ~Tenant();
-  static Tenant* fromJSON(const Json::Value *val);
-  static Json::Value* toJSON(Tenant* instance);
+  static Tenant* fromJSON(const Json::Value &val);
+  static Json::Value* toJSON(const Tenant &instance);
   //Getters and Setters
   const std::string& getDescription() const;
   void setDescription(const std::string& description);

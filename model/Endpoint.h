@@ -40,8 +40,8 @@ class Endpoint {
 public:
   Endpoint();
   virtual ~Endpoint();
-  static Endpoint* fromJSON(Json::Value *val);
-  static Json::Value* toJSON(Endpoint* instance);
+  static Endpoint* fromJSON(const Json::Value &val);
+  static Json::Value* toJSON(const Endpoint& instance);
   //Getter Setters
   const std::string& getAdminUrl() const;
   void setAdminUrl(const std::string& adminUrl);

@@ -27,23 +27,23 @@ Tenant::Tenant(const std::string& _id, const std::string& _name,
   this->enabled = _enabled;
 }
 
-Tenant* Tenant::fromJSON(const Json::Value *val) {
+Tenant* Tenant::fromJSON(const Json::Value &val) {
   Tenant *instance = new Tenant();
-  instance->setId(val->get("id", Json::Value::null).asString());
-  instance->setName(val->get("name", Json::Value::null).asString());
+  instance->setId(val.get("id", Json::Value::null).asString());
+  instance->setName(val.get("name", Json::Value::null).asString());
   instance->setDescription(
-      val->get("description", Json::Value::null).asString());
-  instance->setEnabled(val->get("enabled", false).asBool());
+      val.get("description", Json::Value::null).asString());
+  instance->setEnabled(val.get("enabled", false).asBool());
   return instance;
 }
 
-Json::Value* Tenant::toJSON(Tenant* instance) {
+Json::Value* Tenant::toJSON(const Tenant &instance) {
   Json::Value* json = new Json::Value();
 
-  (*json)["id"] = instance->getId();
-  (*json)["name"] = instance->getName();
-  (*json)["description"] = instance->getDescription();
-  (*json)["enabled"] = instance->isEnabled();
+  (*json)["id"] = instance.getId();
+  (*json)["name"] = instance.getName();
+  (*json)["description"] = instance.getDescription();
+  (*json)["enabled"] = instance.isEnabled();
 
   return json;
 }

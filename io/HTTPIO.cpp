@@ -58,8 +58,12 @@ HTTPClientSession* HTTPIO::doPost(const string &url, const string &reqBody,
   //Set Content Type
   request.setContentLength(reqBody.size());
   request.setContentType(contentType);
+  //session->
   //write request body
-  session->sendRequest(request) << reqBody;
+  ostream &ostream = session->sendRequest(request);
+  if(ostream == nullptr)
+	  return nullptr;
+  ostream << reqBody;
   return session;
 }
 

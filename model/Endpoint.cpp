@@ -19,30 +19,30 @@ Endpoint::~Endpoint() {
   // TODO Auto-generated destructor stub
 }
 
-Endpoint* Endpoint::fromJSON(Json::Value* val) {
+Endpoint* Endpoint::fromJSON(const Json::Value &val) {
   Endpoint *instance = new Endpoint();
 
-  instance->setId(val->get("id", Json::Value::null).asString());
-  instance->setName(val->get("name", Json::Value::null).asString());
-  instance->setType(val->get("type", Json::Value::null).asString());
-  instance->setAdminUrl(val->get("adminURL", Json::Value::null).asString());
-  instance->setInternalUrl(val->get("internalURL", Json::Value::null).asString());
-  instance->setPublicUrl(val->get("publicURL", Json::Value::null).asString());
-  instance->setRegion(val->get("region", Json::Value::null).asString());
+  instance->setId(val.get("id", Json::Value::null).asString());
+  instance->setName(val.get("name", Json::Value::null).asString());
+  instance->setType(val.get("type", Json::Value::null).asString());
+  instance->setAdminUrl(val.get("adminURL", Json::Value::null).asString());
+  instance->setInternalUrl(val.get("internalURL", Json::Value::null).asString());
+  instance->setPublicUrl(val.get("publicURL", Json::Value::null).asString());
+  instance->setRegion(val.get("region", Json::Value::null).asString());
 
   return instance;
 }
 
-Json::Value* Endpoint::toJSON(Endpoint* instance) {
+Json::Value* Endpoint::toJSON(const Endpoint &instance) {
   Json::Value* json = new Json::Value();
 
-  (*json)["id"] = instance->getId();
-  (*json)["name"] = instance->getName();
-  (*json)["type"] = instance->getType();
-  (*json)["adminURL"] = instance->getAdminUrl();
-  (*json)["internalURL"] = instance->getInternalUrl();
-  (*json)["publicURL"] = instance->getPublicUrl();
-  (*json)["region"] = instance->getRegion();
+  (*json)["id"] = instance.getId();
+  (*json)["name"] = instance.getName();
+  (*json)["type"] = instance.getType();
+  (*json)["adminURL"] = instance.getAdminUrl();
+  (*json)["internalURL"] = instance.getInternalUrl();
+  (*json)["publicURL"] = instance.getPublicUrl();
+  (*json)["region"] = instance.getRegion();
 
 
   return json;

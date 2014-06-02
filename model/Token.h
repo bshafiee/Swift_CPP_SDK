@@ -25,8 +25,8 @@ public:
   Token();
   Token(const std::string &_expires,const std::string &id,const std::string &issued_at,Tenant *tenant);
   virtual ~Token();
-  static Token* fromJSON(const Json::Value *val);
-  Json::Value* toJSON(Token* instance);
+  static Token* fromJSON(const Json::Value &val);
+  static Json::Value* toJSON(const Token& instance);
   //Getter Setters
   const std::string& getExpires() const;
   void setExpires(const std::string& expires);
