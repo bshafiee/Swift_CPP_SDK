@@ -183,6 +183,13 @@ Tenant* Account::getTenants() {
   return this->token->getTenant();
 }
 
+Service* Account::getSwiftService() {
+  for(uint i=0;i<services.size();i++)
+    if(services[i].getType() == "object-store")
+      return &services[i];
+  return nullptr;
+}
+
 std::string Account::toString() {
   std::ostringstream output;
   std::ostringstream roleStream;

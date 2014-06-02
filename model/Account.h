@@ -175,6 +175,12 @@ public:
 	 * @return string containing all the objects of this account
 	 */
 	std::string toString();
+
+	/**
+	 * Get Object Storage service
+	 * @return swift service
+	 */
+	Service* getSwiftService();
 };
 
 } /* namespace Swift */
