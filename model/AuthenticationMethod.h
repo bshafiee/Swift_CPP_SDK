@@ -8,11 +8,26 @@
 #ifndef AUTHENTICATIONMETHOD_H_
 #define AUTHENTICATIONMETHOD_H_
 
+#include <cstdio>
+
 namespace Swift {
 
 enum class AuthenticationMethod {
   BASIC , TEMPAUTH , KEYSTONE
 };
+
+static std::string authenticationMethodToString(AuthenticationMethod method) {
+  switch (method) {
+  case AuthenticationMethod::BASIC:
+    return "BASIC";
+  case AuthenticationMethod::TEMPAUTH:
+    return "TEMPAUTH";
+  case AuthenticationMethod::KEYSTONE:
+    return "KEYSTONE";
+  default:
+    return "UNKNOWN";
+  }
+}
 
 }
 

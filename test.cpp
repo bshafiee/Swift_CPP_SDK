@@ -70,7 +70,7 @@ int main(int argc, char** argv)
         }
     }
    */
-  Account* account = new Account();
-  account->authenticate("behrooz","behrooz","http://192.168.249.109:5000/v2.0/tokens",true,"BehroozProject");
+  SwiftResult<Account*>* result = Account::authenticate("behrooz","behrooz","http://192.168.249.109:5000/v2.0/tokens",true,"BehroozProject");
+  //cout<<result->getPayload()->toString();
   //account->increaseCallCounter();
 }

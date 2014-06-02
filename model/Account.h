@@ -9,7 +9,7 @@
 #define ACCOUNT_H_
 
 #include "Token.h"
-#include "Endpoint.h"
+#include "Service.h"
 #include "AuthenticationMethod.h"
 #include "../interface/SwiftResult.h"
 #include <iostream>
@@ -59,9 +59,9 @@ private:
 	std::vector<Role> roles;
 
 	/**
-	 * Openstack Endpoints
+	 * Openstack Services
 	 */
-	std::vector<Endpoint> endpoints;
+	std::vector<Service> services;
 
 	/**
 	 * ObjectStore tokens expire after 24 hours. If reauthentication is allowed (default behaviour),
@@ -70,11 +70,6 @@ private:
 	 * is recommended for web servers or otherwise long-living processes.
 	 */
 	bool allowReauthenticate = true;
-
-	/**
-	 * Public url to interact with ObjectStore
-	 */
-	std::string publicHost;
 
 	/**
 	 * The preferred region will determine what Swift end-point will be chosen. If no preferred region is
@@ -148,14 +143,7 @@ public:
 	 */
 	long getServerTime();
 
-	void setAllowReauthenticate(bool allowReauthenticate);
-
-	/**
-	 * Set your own host to prefix the URLs of objects
-	 * @param host host of an object's URL
-	 * @return instance of Account
-	 */
-	void setPublicHost(const std::string &host);
+	void setAllowReauthenticate(bool _allowReauthenticate);
 
 	/**
 	 * Whether reauthentication on expiration of the authentication token is allowed, or this is done
@@ -177,11 +165,16 @@ public:
 	static ulong getNumberOfCalls();
 
 	/**
-	 * Returns the tenants of the account. Note that this is the only Account method that interacts with the object
-	 * store and will work when no tenant has been set. All others will throw an exception.
-	 * @return the tenants belonging to the Account
+	 * Returns the tenant of the account.
+	 * @return the tenant belonging to the Account
 	 */
-	std::vector<Tenant> getTenants();
+	Tenant* getTenants();
+
+	/**
+	 * String representation of this class
+	 * @return string containing all the objects of this account
+	 */
+	std::string toString();
 };
 
 } /* namespace Swift */

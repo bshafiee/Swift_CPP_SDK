@@ -1,7 +1,7 @@
 /*
  * Endpoint.h
  *
- *  Created on: 2014-05-29
+ *  Created on: 2014-06-02
  *      Author: Behrooz Shafiee Sarjaz
  */
 
@@ -12,25 +12,8 @@
 #include <json/json.h>
 
 namespace Swift {
-/**
- *  {
-            "endpoints" : [
-               {
-                  "adminURL" : "http://192.168.249.109:35357/v2.0",
-                  "id" : "173b6f35020040e7b4db0119d3449be0",
-                  "internalURL" : "http://192.168.249.109:5000/v2.0",
-                  "publicURL" : "http://192.168.249.109:5000/v2.0",
-                  "region" : "RegionOne"
-               }
-            ],
-            "endpoints_links" : [],
-            "name" : "keystone",
-            "type" : "identity"
-         }
- */
+
 class Endpoint {
-  std::string name;
-  std::string type;
   std::string adminURL;
   std::string id;
   std::string internalURL;
@@ -49,14 +32,10 @@ public:
   void setId(const std::string& id);
   const std::string& getInternalUrl() const;
   void setInternalUrl(const std::string& internalUrl);
-  const std::string& getName() const;
-  void setName(const std::string& name);
   const std::string& getPublicUrl() const;
   void setPublicUrl(const std::string& publicUrl);
   const std::string& getRegion() const;
   void setRegion(const std::string& region);
-  const std::string& getType() const;
-  void setType(const std::string& type);
 };
 
 } /* namespace Swift */

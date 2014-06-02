@@ -10,7 +10,7 @@
 namespace Swift {
 
 Endpoint::Endpoint() :
-    name("null"), type("null"), adminURL("null"), id("null"), internalURL(
+    adminURL("null"), id("null"), internalURL(
         "null"), publicURL("null"), region("null") {
   // TODO Auto-generated constructor stub
 }
@@ -21,10 +21,8 @@ Endpoint::~Endpoint() {
 
 Endpoint* Endpoint::fromJSON(const Json::Value &val) {
   Endpoint *instance = new Endpoint();
-
+  //Parsing endpoint array information
   instance->setId(val.get("id", Json::Value::null).asString());
-  instance->setName(val.get("name", Json::Value::null).asString());
-  instance->setType(val.get("type", Json::Value::null).asString());
   instance->setAdminUrl(val.get("adminURL", Json::Value::null).asString());
   instance->setInternalUrl(val.get("internalURL", Json::Value::null).asString());
   instance->setPublicUrl(val.get("publicURL", Json::Value::null).asString());
@@ -37,8 +35,6 @@ Json::Value* Endpoint::toJSON(const Endpoint &instance) {
   Json::Value* json = new Json::Value();
 
   (*json)["id"] = instance.getId();
-  (*json)["name"] = instance.getName();
-  (*json)["type"] = instance.getType();
   (*json)["adminURL"] = instance.getAdminUrl();
   (*json)["internalURL"] = instance.getInternalUrl();
   (*json)["publicURL"] = instance.getPublicUrl();
@@ -72,14 +68,6 @@ void Endpoint::setInternalUrl(const std::string& internalUrl) {
   internalURL = internalUrl;
 }
 
-const std::string& Endpoint::getName() const {
-  return name;
-}
-
-void Endpoint::setName(const std::string& name) {
-  this->name = name;
-}
-
 const std::string& Endpoint::getPublicUrl() const {
   return publicURL;
 }
@@ -95,13 +83,4 @@ const std::string& Endpoint::getRegion() const {
 void Endpoint::setRegion(const std::string& region) {
   this->region = region;
 }
-
-const std::string& Endpoint::getType() const {
-  return type;
-}
-
-void Endpoint::setType(const std::string& type) {
-  this->type = type;
-}
-
 } /* namespace Swift */

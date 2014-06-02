@@ -30,8 +30,8 @@ Token::~Token() {
 Token* Token::fromJSON(const Json::Value &val) {
 	Token *instance = new Token();
 	instance->setExpires(val.get("expires", Json::Value::null).asString());
-	instance->setId(val.get("expires", Json::Value::null).asString());
-	instance->setIssuedAt(val.get("expires", Json::Value::null).asString());
+	instance->setId(val.get("id", Json::Value::null).asString());
+	instance->setIssuedAt(val.get("issued_at", Json::Value::null).asString());
 	Json::Value tenant = val.get("tenant", Json::Value::null);
 	instance->setTenant(Tenant::fromJSON(tenant));
 
