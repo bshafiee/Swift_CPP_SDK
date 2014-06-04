@@ -9,6 +9,7 @@
 #include <iostream>
 #include "io/HTTPIO.h"
 #include "model/Account.h"
+#include "interface/SwiftAPI.h"
 
 
 using namespace Poco::Net;
@@ -70,7 +71,20 @@ int main(int argc, char** argv)
         }
     }
    */
-  SwiftResult<Account*>* result = Account::authenticate("behrooz","behrooz","http://192.168.249.109:5000/v2.0/tokens",true,"BehroozProject");
-  cout<<result->getPayload()->toString();
+  AuthenticationInfo info;
+  info.username = "behrooz";
+  info.password = "behrooz";
+  info.authUrl = "http://192.168.249.109:5000/v2.0/tokens";
+  info.tenantName= "BehroozProject";
+  info.method = AuthenticationMethod::KEYSTONE;
+  SwiftResult<Account*>* result = Account::authenticate(info);
+  //cout<<result->getPayload()->toString();
+  SwiftResult<istream*>* accountDetails = result->getPayload()->swiftAccountDetails();
+  StreamCopier::copyStream(*accountDetails->getPayload(),cout);
+  cout<<endl<<"X-Account-Object-Count: "<< accountDetails->getResponse()->get("X-Account-Object-Count")<<endl;
+  cout<<"X-Account-Bytes-Used: "<< accountDetails->getResponse()->get("X-Account-Bytes-Used")<<endl;
+  cout<<"Date: "<< accountDetails->getResponse()->get("Date")<<endl;
+
+
   //account->increaseCallCounter();
 }

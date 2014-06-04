@@ -9,6 +9,7 @@
 #include "../io/HTTPIO.h"
 #include <Poco/Exception.h>
 #include <sstream>      // std::ostringstream
+
 using namespace std;
 using namespace Poco;
 using namespace Poco::Net;
@@ -17,6 +18,9 @@ namespace Swift {
 
 /** Initialize Static members **/
 ulong Account::numOfCalls = 0;
+
+/** Forward Declarations **/
+inline SwiftResult<std::istream*>* returnNullError(const std::string &whatsNull);
 
 struct Role {
   string name = "null";
@@ -40,23 +44,21 @@ Account::~Account() {
 }
 
 Account::Account() :
-    userID(""), name(""), token(nullptr), username(""), password(""), authUrl(
-        ""), allowReauthenticate(false), preferredRegion(""), delimiter('/'), authenticationMethod(
-        AuthenticationMethod::KEYSTONE) {
+    userID(""), name(""), token(nullptr), allowReauthenticate(false), preferredRegion(
+        ""), delimiter('/') {
   // TODO Auto-generated constructor stub
 
 }
 
-SwiftResult<Account*>* Account::authenticate(const string & _username,
-    const string & _password, const string &_authUrl, bool _allowReauthenticate,
-    const string &_tenantName) {
+SwiftResult<Account*>* Account::authenticate(
+    const AuthenticationInfo &_authInfo, bool _allowReauthenticate) {
   // Create Json Request
   Json::Value jReq;
   Json::Value auth;
-  if (_tenantName != "")
-    auth["tenantName"] = _tenantName;
-  auth["passwordCredentials"]["username"] = _username;
-  auth["passwordCredentials"]["password"] = _password;
+  if (_authInfo.tenantName != "")
+    auth["tenantName"] = _authInfo.tenantName;
+  auth["passwordCredentials"]["username"] = _authInfo.username;
+  auth["passwordCredentials"]["password"] = _authInfo.password;
   jReq["auth"] = auth;
   Json::FastWriter writer;
 
@@ -67,7 +69,7 @@ SwiftResult<Account*>* Account::authenticate(const string & _username,
   HTTPResponse *httpResponse = new HTTPResponse();
   istream* inputStream = nullptr;
   try {
-    httpSession = Swift::HTTPIO::doPost(_authUrl, req, contentType);
+    httpSession = Swift::HTTPIO::doPost(_authInfo.authUrl, req, contentType);
     //Receive Data
     inputStream = &httpSession->receiveResponse(*httpResponse);
   } catch (Exception &e) {
@@ -105,9 +107,9 @@ SwiftResult<Account*>* Account::authenticate(const string & _username,
     return result;
   }
   /*Printing result for debugging purposes
-  Json::StyledWriter styledWriter;
-  std::cout<<styledWriter.write(root)<<std::endl;
-  */
+   Json::StyledWriter styledWriter;
+   std::cout<<styledWriter.write(root)<<std::endl;
+   */
   //Parsing JSON Successful
   //Everything is inside "access"
   root = root["access"];
@@ -116,7 +118,7 @@ SwiftResult<Account*>* Account::authenticate(const string & _username,
   Json::Value userRoot = root.get("user", Json::nullValue);
   instance->userID = userRoot.get("id", "").asString();
   instance->name = userRoot.get("name", "").asString();
-  instance->username = userRoot.get("username", "").asString();
+  instance->authInfo.username = userRoot.get("username", "").asString();
   //Roles
   Json::Value roles = userRoot.get("roles", Json::nullValue);
   if (roles != Json::nullValue) {
@@ -135,8 +137,8 @@ SwiftResult<Account*>* Account::authenticate(const string & _username,
       instance->services.push_back(*Service::fromJSON(serviceRoot[i]));
 
   //Return result
-  instance->password = _password;
-  instance->authUrl = _authUrl;
+  instance->authInfo.password = _authInfo.password;
+  instance->authInfo.authUrl = _authInfo.authUrl;
   instance->allowReauthenticate = _allowReauthenticate;
 
   SwiftResult<Account*> *result = new SwiftResult<Account*>();
@@ -179,13 +181,17 @@ ulong Account::getNumberOfCalls() {
   return Account::numOfCalls;
 }
 
-Tenant* Account::getTenants() {
+Tenant* Account::getTenant() {
   return this->token->getTenant();
 }
 
+Token* Account::getToken() {
+  return this->token;
+}
+
 Service* Account::getSwiftService() {
-  for(uint i=0;i<services.size();i++)
-    if(services[i].getType() == "object-store")
+  for (uint i = 0; i < services.size(); i++)
+    if (services[i].getType() == "object-store")
       return &services[i];
   return nullptr;
 }
@@ -208,15 +214,111 @@ std::string Account::toString() {
   serviceStream << "}";
 
   output << "userID:" << userID << ",\n" << "name:" << name << ",\n"
-      << "username:" << username << ",\n" << "password:" << password << ",\n"
-      << "authUrl:" << authUrl << ",\n" << "allowReauthenticate:"
-      << allowReauthenticate << ",\n" << "preferredRegion:" << preferredRegion
-      << ",\n" << "delimiter:" << delimiter << ",\n" << "authenticationmethod:"
-      << authenticationMethodToString(authenticationMethod) << ",\n" << "token:"
+      << "username:" << authInfo.username << ",\n" << "password:"
+      << authInfo.password << ",\n" << "authUrl:" << authInfo.authUrl << ",\n"
+      << "allowReauthenticate:" << allowReauthenticate << ",\n"
+      << "preferredRegion:" << preferredRegion << ",\n" << "delimiter:"
+      << delimiter << ",\n" << "authenticationmethod:"
+      << authenticationMethodToString(authInfo.method) << ",\n" << "token:"
       << jsonWriter.write(*Token::toJSON(*this->token)) << ",\n"
       << roleStream.str() << ",\n" << serviceStream.str();
 
   return output.str();
+}
+
+SwiftResult<std::istream*>* Account::swiftAccountDetails(
+    HTTPHeader& _formatHeader, bool _newest) {
+  std::vector<HTTPHeader> _queryMap;
+  return swiftAccountDetails(_formatHeader,_queryMap,_newest);
+}
+
+SwiftResult<std::istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader, std::vector<HTTPHeader> &_queryMap, bool _newest) {
+  //Swift Endpoint
+  Endpoint* swiftEndpoint = this->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader>  *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  //add X-Newest
+  if(_newest)
+    reqParamMap->push_back(*new HTTPHeader("X-Newest", "True"));
+  //Accept
+  reqParamMap->push_back(*new HTTPHeader("Accept", "application/json"));
+  //Create appropriate URI
+  std::ostringstream queryStream;
+  queryStream <<"?"<<_formatHeader.getQueryValue();
+  if(_queryMap.size() > 0) {
+    for(uint i=0;i<_queryMap.size();i++)
+    {
+      queryStream <<",";
+      queryStream <<_queryMap[i].getQueryValue();
+    }
+  }
+
+  URI uri(swiftEndpoint->getPublicUrl());
+  uri.setQuery(queryStream.str());
+
+
+  HTTPClientSession *httpSession = nullptr;
+  HTTPResponse *httpResponse = new HTTPResponse();
+  istream* inputStream = nullptr;
+  try {
+    /** This operation does not accept a request body. **/
+    httpSession = Swift::HTTPIO::doGet(uri,reqParamMap);
+    //Receive Data
+    inputStream = &httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<std::istream*> *result = new SwiftResult<std::istream*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 200:
+   *  Success. The response body lists the containers.
+   *
+   * 204:
+   *  Success. The response body shows no containers.
+   *  Either the account has no containers or you are paging
+   *  through a long list of names by using the marker, limit,
+   *  or end_marker query parameters, and you have reached
+   *  the end of the list.
+   */
+  if(
+      httpResponse->getStatus() != HTTPResponse::HTTP_OK &&
+      httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT
+      ) {
+    SwiftResult<std::istream*> *result = new SwiftResult<std::istream*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<std::istream*> *result = new SwiftResult<std::istream*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(inputStream);
+  return result;
+}
+
+inline SwiftResult<std::istream*>* returnNullError(const std::string &whatsNull) {
+  SwiftResult<std::istream*> *result = new SwiftResult<std::istream*>();
+  SwiftError error(SwiftError::SWIFT_FAIL, whatsNull+" is NULL");
+  result->setError(error);
+  result->setResponse(nullptr);
+  result->setPayload(nullptr);
+  return result;
 }
 
 } /* namespace Swift */

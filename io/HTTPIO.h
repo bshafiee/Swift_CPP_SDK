@@ -18,16 +18,19 @@
 #include <Poco/HashMap.h>
 #include <Poco/URI.h>
 #include <iostream>
+#include <vector>
+#include "../header/Header.h"
 
 
 namespace Swift {
 
 class HTTPIO {
 public:
-  //Hashmap
-  typedef Poco::HashMap<std::string, std::string> HTTPParamMap;
-  static Poco::Net::HTTPClientSession* doGet (const std::string &url,uint port,const HTTPParamMap *params);
-  static Poco::Net::HTTPClientSession* doPost(const std::string &url,uint port,const HTTPParamMap *params);
+  static Poco::Net::HTTPClientSession* doGet(const std::string &url, uint port, std::vector<HTTPHeader> *params);
+  static Poco::Net::HTTPClientSession* doGet(const std::string &url, std::vector<HTTPHeader> *params);
+  static Poco::Net::HTTPClientSession* doGet(const Poco::URI &uri, std::vector<HTTPHeader> *params);
+  static Poco::Net::HTTPClientSession* doGet(const std::string &url, const std::string &reqBody, const std::string &contentType);
+  static Poco::Net::HTTPClientSession* doPost(const std::string &url,uint port,std::vector<HTTPHeader> *params);
   static Poco::Net::HTTPClientSession* doPost(const std::string &uri,const std::string &reqBody, const std::string &contentType);
 };
 

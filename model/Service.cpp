@@ -78,4 +78,11 @@ void Service::setType(const std::string& type) {
   this->type = type;
 }
 
+Endpoint* Service::getFirstEndpoint() {
+  if(endpoints.size() > 0)
+    return &endpoints[0];
+  else
+    return nullptr;
+}
+
 } /* namespace Swift */

@@ -45,7 +45,7 @@ public:
     this->payload = payload;
   }
 
-  const Poco::Net::HTTPResponse*& getResponse() const {
+  Poco::Net::HTTPResponse* getResponse() const {
     return response;
   }
 

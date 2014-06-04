@@ -8,18 +8,31 @@
 #ifndef SWIFTAPI_H_
 #define SWIFTAPI_H_
 
+#include <iostream>
+#include "SwiftResult.h"
+#include "../model/Account.h"
+#include "../io/HTTPIO.h"
+
 namespace Swift {
 
-class SwiftAPI {
-public:
-  SwiftAPI();
-  virtual ~SwiftAPI();
+/** SWIFT API Interfaces **/
+//Accounts Operations
+/*SwiftResult<Account*>* swiftAccountAuthenticate(
+    const AuthenticationInfo &_authInfo, bool _allowReauthenticate = true);
+SwiftResult<std::istream*>* swiftAccountDetails(Account &_account,
+    HTTPIO::HTTPParamMap *_reqParamMap = nullptr);
+SwiftResult<std::istream*>* swiftAccountCreateMetadata(Account &_account,
+    const std::string &metadataName, const std::string &metadataValue,
+    HTTPIO::HTTPParamMap *_reqParamMap = nullptr);
+SwiftResult<std::istream*>* swiftAccountUpdateMetadata(Account &_account,
+    const std::string &metadataName, const std::string &metadataValue,
+    HTTPIO::HTTPParamMap *_reqParamMap = nullptr);
+SwiftResult<std::istream*>* swiftAccountRemoveMetadata(Account &_account,
+    const std::string &metadataName, HTTPIO::HTTPParamMap *_reqParamMap =
+        nullptr);*/
 
-  /** SWIFT API INTERFaces **/
-  //Accounts Operations
-  //Container Operations
-  //Object Operations
-};
-
-} /* namespace Swift */
+//Container Operations
+//Object Operations
+}
+/* namespace Swift */
 #endif /* SWIFTAPI_H_ */

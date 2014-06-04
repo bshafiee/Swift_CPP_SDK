@@ -36,5 +36,8 @@ struct SwiftError {
   static const int SWIFT_JSON_PARSE_ERROR = -3; //JSON Parsing Error happened
 };
 
+//Always the same message
+static SwiftError SWIFT_OK(SwiftError::SWIFT_OK,"SWIFT_OK");
+
 }
 #endif /* ERRORNO_H_ */

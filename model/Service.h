@@ -47,6 +47,7 @@ public:
   void setType(const std::string& type);
   const std::vector<Endpoint>& getEndpoints() const;
   void setEndpoints(const std::vector<Endpoint>& endpoints);
+  Endpoint* getFirstEndpoint();
 };
 
 } /* namespace Swift */

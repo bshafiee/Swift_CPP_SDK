@@ -6,16 +6,13 @@
  */
 
 #include "SwiftAPI.h"
+#include <Poco/Net/HTTPClientSession.h>
+#include <iostream>
+#include <sstream>
 
-namespace Swift {
+using namespace Swift;
+using namespace Poco;
+using namespace Poco::Net;
+using namespace std;
 
-SwiftAPI::SwiftAPI() {
-  // TODO Auto-generated constructor stub
 
-}
-
-SwiftAPI::~SwiftAPI() {
-  // TODO Auto-generated destructor stub
-}
-
-} /* namespace Swift */
