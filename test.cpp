@@ -9,6 +9,7 @@
 #include <iostream>
 #include "io/HTTPIO.h"
 #include "model/Account.h"
+#include "model/Container.h"
 
 
 using namespace Poco::Net;
@@ -101,7 +102,15 @@ int main(int argc, char** argv)
 
   SwiftResult<void*>* metaDataRes = result->getPayload()->swiftShowMetadata();
   cout<<endl<<endl;
-  metaDataRes->getResponse()->write(cout);*/
+  metaDataRes->getResponse()->write(cout);
+
+  Container container(result->getPayload());
+  SwiftResult<istream*>* containerDetails = container.swiftGetObjects("bcontainer");
+  StreamCopier::copyStream(*containerDetails->getPayload(),cout);
+
+  Container container(result->getPayload());
+  SwiftResult<void*>* containerDetails = container.swiftDeleteContainer("Container2");
+  containerDetails->getResponse()->write(cout);*/
 
 
 

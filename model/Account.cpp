@@ -254,8 +254,8 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
   reqParamMap->push_back(*new HTTPHeader("Accept", _formatHeader.getValue()));
   //Create appropriate URI
   ostringstream queryStream;
-  queryStream << "?";
   if (_queryMap.size() > 0) {
+    queryStream << "?";
     for (uint i = 0; i < _queryMap.size(); i++) {
       if (i > 0)
         queryStream << ",";
