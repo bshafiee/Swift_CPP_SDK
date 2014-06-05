@@ -16,28 +16,18 @@ struct HTTPHeader {
 private:
   std::pair<std::string,std::string> pair;
 public:
-  HTTPHeader(std::string key,std::string value) {
-    pair = std::make_pair(key,value);
-  }
-
-  std::string getKey() {
-    return pair.first;
-  }
-
-  std::string getValue() {
-      return pair.second;
-  }
-
-  std::string getQueryValue() {
-    return pair.first+"="+pair.second;
-  }
+  HTTPHeader(std::string key,std::string value);
+  /** Methods **/
+  std::string getKey();
+  std::string getValue();
+  std::string getQueryValue();
 };
 
 
 /** Common HTTP Headers **/
-static HTTPHeader HEADER_FORMAT_JSON("format","json");
-static HTTPHeader HEADER_FORMAT_XML("format","xml");
-
+extern HTTPHeader HEADER_FORMAT_APPLICATION_JSON;
+extern HTTPHeader HEADER_FORMAT_APPLICATION_XML;
+extern HTTPHeader HEADER_FORMAT_TEXT_XML;
 
 } /* namespace Swift */
 #endif /* HEADER_H_ */

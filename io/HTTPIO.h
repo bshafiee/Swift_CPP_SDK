@@ -21,18 +21,13 @@
 #include <vector>
 #include "../header/Header.h"
 
-
 namespace Swift {
 
-class HTTPIO {
-public:
-  static Poco::Net::HTTPClientSession* doGet(const std::string &url, uint port, std::vector<HTTPHeader> *params);
-  static Poco::Net::HTTPClientSession* doGet(const std::string &url, std::vector<HTTPHeader> *params);
-  static Poco::Net::HTTPClientSession* doGet(const Poco::URI &uri, std::vector<HTTPHeader> *params);
-  static Poco::Net::HTTPClientSession* doGet(const std::string &url, const std::string &reqBody, const std::string &contentType);
-  static Poco::Net::HTTPClientSession* doPost(const std::string &url,uint port,std::vector<HTTPHeader> *params);
-  static Poco::Net::HTTPClientSession* doPost(const std::string &uri,const std::string &reqBody, const std::string &contentType);
-};
+Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
+    const std::string &type, std::vector<HTTPHeader> *params);
+Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
+    const std::string &type, std::vector<HTTPHeader> *params,
+    const std::string &reqBody, const std::string &contentType);
 
 } /* namespace Swift */
 #endif /* HTTPIO_H_ */

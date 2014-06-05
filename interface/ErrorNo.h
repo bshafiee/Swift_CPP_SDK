@@ -16,18 +16,8 @@ namespace Swift {
 struct SwiftError {
   int code;
   std::string msg;
-  SwiftError(int _code,std::string _msg) {
-    code = _code;
-    msg = _msg;
-  }
-
-  std::string toString() {
-    int len = strlen(msg.c_str())+20;
-    char *temp = new char[len];
-    snprintf(temp,len,"Error %d: %s",code,msg.c_str());
-    return std::string(temp);
-  }
-
+  SwiftError(int _code, std::string _msg);
+  std::string toString();
   /** List of Errors **/
   static const int SWIFT_OK = 0; //Successful
   static const int SWIFT_FAIL = -1; //Unsuccessful
@@ -37,7 +27,7 @@ struct SwiftError {
 };
 
 //Always the same message
-static SwiftError SWIFT_OK(SwiftError::SWIFT_OK,"SWIFT_OK");
+extern SwiftError SWIFT_OK;
 
 }
 #endif /* ERRORNO_H_ */

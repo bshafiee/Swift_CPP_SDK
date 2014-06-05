@@ -2,7 +2,7 @@
 CXXFLAGS = -g -Wall -fmessage-length=0 -std=c++11
 CFLAGS = -Wno-address -Wno-char-subscripts # -Wno-sign-compare
 
-SWIFT=$(wildcard interface/*.cpp io/*.cpp utils/jsoncpp/*.cpp model/*.cpp)
+SWIFT=$(wildcard interface/*.cpp io/*.cpp utils/jsoncpp/*.cpp model/*.cpp header/*.cpp)
 TEST=test.cpp
 CXXSOURCES=$(SWIFT) $(TEST)
 #CSOURCES=httpxx/http_parser.c

@@ -155,11 +155,19 @@ public:
   Service* getSwiftService();
 
   /** API Functions **/
-  SwiftResult<std::istream*>* swiftAccountDetails(HTTPHeader &_formatHeader = HEADER_FORMAT_JSON, bool _newest = false);
+  SwiftResult<std::istream*>* swiftAccountDetails(HTTPHeader &_formatHeader = HEADER_FORMAT_APPLICATION_JSON, bool _newest = false);
   SwiftResult<std::istream*>* swiftAccountDetails(HTTPHeader &_formatHeader, std::vector<HTTPHeader> &_queryMap, bool _newest);
-  /*SwiftResult<std::istream*>* swiftAccountCreateMetadata(const std::string &metadataValue);
-  SwiftResult<std::istream*>* swiftAccountUpdateMetadata(const std::string &metadataName, const std::string &metadataValue);
-  SwiftResult<std::istream*>* swiftAccountRemoveMetadata(const std::string &metadataName);*/
+
+  SwiftResult<void*>* swiftCreateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData);
+  SwiftResult<void*>* swiftCreateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData,std::vector<HTTPHeader> &_reqMap);
+
+  SwiftResult<void*>* swiftUpdateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData);
+  SwiftResult<void*>* swiftUpdateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData,std::vector<HTTPHeader> &_reqMap);
+
+  SwiftResult<void*>* swiftDeleteMetadata(std::vector<std::string> &_metaDataKeys);
+  SwiftResult<void*>* swiftDeleteMetadata(std::vector<std::string> &_metaDataKeys,std::vector<HTTPHeader> &_reqMap);
+
+  SwiftResult<void*>* swiftShowMetadata(bool _newest = false);
 };
 
 } /* namespace Swift */

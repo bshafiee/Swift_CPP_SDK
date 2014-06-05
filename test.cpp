@@ -9,7 +9,6 @@
 #include <iostream>
 #include "io/HTTPIO.h"
 #include "model/Account.h"
-#include "interface/SwiftAPI.h"
 
 
 using namespace Poco::Net;
@@ -78,12 +77,32 @@ int main(int argc, char** argv)
   info.tenantName= "BehroozProject";
   info.method = AuthenticationMethod::KEYSTONE;
   SwiftResult<Account*>* result = Account::authenticate(info);
-  //cout<<result->getPayload()->toString();
-  SwiftResult<istream*>* accountDetails = result->getPayload()->swiftAccountDetails();
+
+  /*cout<<result->getPayload()->toString();
+  SwiftResult<istream*>* accountDetails = result->getPayload()->swiftAccountDetails(HEADER_FORMAT_APPLICATION_JSON);
   StreamCopier::copyStream(*accountDetails->getPayload(),cout);
   cout<<endl<<"X-Account-Object-Count: "<< accountDetails->getResponse()->get("X-Account-Object-Count")<<endl;
   cout<<"X-Account-Bytes-Used: "<< accountDetails->getResponse()->get("X-Account-Bytes-Used")<<endl;
   cout<<"Date: "<< accountDetails->getResponse()->get("Date")<<endl;
+  cout<<"X-Trans-Id: "<< accountDetails->getResponse()->get("X-Trans-Id")<<endl;
+  vector<pair<string, string> > metaData;
+  metaData.push_back(make_pair("metaData1key","metaData2value"));
+  SwiftResult<void*>* metaDataRes = result->getPayload()->swiftCreateMetadata(metaData);
+  cout<<endl<<endl;
+  metaDataRes->getResponse()->write(cout);
+
+  vector<string> deleteKey;
+  deleteKey.push_back("metaData1key");
+  metaDataRes = result->getPayload()->swiftDeleteMetadata(deleteKey);
+  cout<<endl<<endl;
+  metaDataRes->getResponse()->write(cout);
+  cout<<metaDataRes->getResponse()->get("X-Trans-Id");
+
+
+  SwiftResult<void*>* metaDataRes = result->getPayload()->swiftShowMetadata();
+  cout<<endl<<endl;
+  metaDataRes->getResponse()->write(cout);*/
+
 
 
   //account->increaseCallCounter();
