@@ -121,7 +121,7 @@ SwiftResult<std::istream*>* Container::swiftGetObjects(
 SwiftResult<void*>* Container::swiftCreateContainer(
     const std::string& _containerName) {
   vector<HTTPHeader> _queryMap;
-  return swiftCreateContainer(_containerName,_queryMap);
+  return swiftCreateContainer(_containerName, _queryMap);
 }
 
 SwiftResult<void*>* Container::swiftCreateContainer(
@@ -236,6 +236,215 @@ SwiftResult<void*>* Container::swiftDeleteContainer(
    * 204:
    *  Success. container was deleted successfully.
    *
+   */
+  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<void*> *result = new SwiftResult<void*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(nullptr);
+  return result;
+}
+
+SwiftResult<void*>* Container::swiftCreateMetadata(const std::string &_containerName,
+    std::vector<std::pair<std::string, std::string> >& _metaData,
+    std::vector<HTTPHeader>& _reqMap) {
+  //Swift Endpoint
+  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<void*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = account->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  //Add rest of request Parameters
+  if (_reqMap.size() > 0) {
+    for (uint i = 0; i < _reqMap.size(); i++) {
+      reqParamMap->push_back(_reqMap[i]);
+    }
+  }
+
+  //Add Actual metadata
+  if (_metaData.size() > 0)
+    for (uint i = 0; i < _metaData.size(); i++)
+      reqParamMap->push_back(
+          *new HTTPHeader("X-Container-Meta-" + _metaData[i].first, _metaData[i].second));
+
+  //Set URI
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  //Creating HTTP Session
+  HTTPResponse *httpResponse = new HTTPResponse();
+  try {
+    /** This operation does not accept a request body. **/
+    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_POST,reqParamMap);
+    httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 204:
+   *  Success. The response body is empty.
+   */
+  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<void*> *result = new SwiftResult<void*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(nullptr);
+  return result;
+}
+
+SwiftResult<void*>* Container::swiftCreateMetadata(const std::string &_containerName,
+    std::vector<std::pair<std::string, std::string> >& _metaData) {
+  std::vector<HTTPHeader> _reqMap;
+  return swiftCreateMetadata(_containerName,_metaData,_reqMap);
+}
+
+SwiftResult<void*>* Container::swiftUpdateMetadata(const std::string &_containerName,
+    std::vector<std::pair<std::string, std::string> >& _metaData) {
+  std::vector<HTTPHeader> _reqMap;
+  return swiftUpdateMetadata(_containerName,_metaData,_reqMap);
+}
+
+SwiftResult<void*>* Container::swiftUpdateMetadata(const std::string &_containerName,
+    std::vector<std::pair<std::string, std::string> >& _metaData,
+    std::vector<HTTPHeader>& _reqMap) {
+  return swiftCreateMetadata(_containerName,_metaData,_reqMap);
+}
+
+SwiftResult<void*>* Container::swiftDeleteMetadata(const std::string &_containerName,
+    std::vector<std::string>& _metaDataKeys) {
+  std::vector<HTTPHeader> _reqMap;
+  return swiftDeleteMetadata(_containerName,_metaDataKeys,_reqMap);
+}
+
+SwiftResult<void*>* Container::swiftDeleteMetadata(const std::string &_containerName,
+    std::vector<std::string>& _metaDataKeys, std::vector<HTTPHeader>& _reqMap) {
+  //Swift Endpoint
+  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<void*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = account->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  //Add rest of request Parameters
+  if (_reqMap.size() > 0) {
+    for (uint i = 0; i < _reqMap.size(); i++) {
+      reqParamMap->push_back(_reqMap[i]);
+    }
+  }
+
+  //Add Actual metadata
+  if (_metaDataKeys.size() > 0)
+    for (uint i = 0; i < _metaDataKeys.size(); i++)
+      reqParamMap->push_back(
+          *new HTTPHeader("X-Remove-Container-Meta-" + _metaDataKeys[i], "x"));
+
+  //Set URI
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  //Creating HTTP Session
+  HTTPResponse *httpResponse = new HTTPResponse();
+  try {
+    /** This operation does not accept a request body. **/
+    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_POST,
+        reqParamMap);
+    httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 204:
+   *  Success. The response body is empty.
+   */
+  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<void*> *result = new SwiftResult<void*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(nullptr);
+  return result;
+}
+
+SwiftResult<void*>* Container::swiftShowMetadata(
+    const std::string& _containerName, bool _newest) {
+  //Swift Endpoint
+  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<void*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = account->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  if(_newest)
+    reqParamMap->push_back(*new HTTPHeader("X-Newest", "True"));
+
+  //Set URI
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  //Creating HTTP Session
+  HTTPResponse *httpResponse = new HTTPResponse();
+  try {
+    /** This operation does not accept a request body. **/
+    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_HEAD,
+        reqParamMap);
+    httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 204:
+   *  Success. The response body is empty.
    */
   if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
     SwiftResult<void*> *result = new SwiftResult<void*>();

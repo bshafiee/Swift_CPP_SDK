@@ -110,9 +110,23 @@ int main(int argc, char** argv)
 
   Container container(result->getPayload());
   SwiftResult<void*>* containerDetails = container.swiftDeleteContainer("Container2");
+  containerDetails->getResponse()->write(cout);
+
+  Container container(result->getPayload());
+  vector<pair<string, string> > metaData;
+  metaData.push_back(make_pair("metaData1key","metaData2value"));
+  SwiftResult<void*>* containerDetails = container.swiftCreateMetadata("bcontainer",metaData);
+  containerDetails->getResponse()->write(cout);
+
+  cout<<endl<<endl;
+  containerDetails = container.swiftShowMetadata("bcontainer");
+  containerDetails->getResponse()->write(cout);
+
+  cout<<endl<<endl;
+  vector<string> vec;
+  vec.push_back("metaData1key");
+  containerDetails = container.swiftDeleteMetadata("bcontainer",vec);
   containerDetails->getResponse()->write(cout);*/
 
 
-
-  //account->increaseCallCounter();
 }

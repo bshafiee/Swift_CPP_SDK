@@ -28,14 +28,17 @@ public:
 
   SwiftResult<void*>* swiftDeleteContainer(const std::string &_containerName);
 
-  SwiftResult<void*>* swiftCreateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData);
-  SwiftResult<void*>* swiftCreateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData,std::vector<HTTPHeader> &_reqMap);
+  SwiftResult<void*>* swiftCreateMetadata(const std::string &_containerName,std::vector<std::pair<std::string,std::string>> &_metaData);
+  SwiftResult<void*>* swiftCreateMetadata(const std::string &_containerName,std::vector<std::pair<std::string,std::string>> &_metaData,std::vector<HTTPHeader> &_reqMap);
 
-  SwiftResult<void*>* swiftUpdateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData);
-  SwiftResult<void*>* swiftUpdateMetadata(std::vector<std::pair<std::string,std::string>> &_metaData,std::vector<HTTPHeader> &_reqMap);
+  SwiftResult<void*>* swiftUpdateMetadata(const std::string &_containerName,std::vector<std::pair<std::string,std::string>> &_metaData);
+  SwiftResult<void*>* swiftUpdateMetadata(const std::string &_containerName,std::vector<std::pair<std::string,std::string>> &_metaData,std::vector<HTTPHeader> &_reqMap);
 
-  SwiftResult<void*>* swiftDeleteMetadata(std::vector<std::string> &_metaDataKeys);
-  SwiftResult<void*>* swiftDeleteMetadata(std::vector<std::string> &_metaDataKeys,std::vector<HTTPHeader> &_reqMap);
+  SwiftResult<void*>* swiftDeleteMetadata(const std::string &_containerName,std::vector<std::string> &_metaDataKeys);
+  SwiftResult<void*>* swiftDeleteMetadata(const std::string &_containerName,std::vector<std::string> &_metaDataKeys,std::vector<HTTPHeader> &_reqMap);
+
+  SwiftResult<void*>* swiftShowMetadata(const std::string &_containerName, bool _newest = false);
+
 };
 
 } /* namespace Swift */
