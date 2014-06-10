@@ -28,6 +28,9 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
 Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
     const std::string &type, std::vector<HTTPHeader> *params,
     const std::string &reqBody, const std::string &contentType);
+Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
+    const std::string &type, std::vector<HTTPHeader> *params,
+    const char* reqBody, ulong size);
 
 } /* namespace Swift */
 #endif /* HTTPIO_H_ */

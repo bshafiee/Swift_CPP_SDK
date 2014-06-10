@@ -10,6 +10,7 @@
 #include "io/HTTPIO.h"
 #include "model/Account.h"
 #include "model/Container.h"
+#include "model/Object.h"
 
 
 using namespace Poco::Net;
@@ -128,5 +129,25 @@ int main(int argc, char** argv)
   containerDetails = container.swiftDeleteMetadata("bcontainer",vec);
   containerDetails->getResponse()->write(cout);*/
 
+  //Create a container
+  Container container(result->getPayload());
+  container.setName("Container2");
+  //Create an object
+  Object newObject(&container);
+  string data = "Hello Sexy World :)";
+  SwiftResult<void*>* createResult = newObject.swiftCreateReplaceObject("gholiOBJ",data.c_str(),data.size(),true);
+  createResult->getResponse()->write(cout);
+
+  SwiftResult<void*>* copyResult = newObject.swiftCopyObject("gholiOBJ","CopyGholi",container);
+  copyResult->getResponse()->write(cout);
+
+  cout<<"DeleteResult:"<<endl;
+  SwiftResult<istream*>* deleteResult = newObject.swiftDeleteObject("CopyGholi",false);
+  deleteResult->getResponse()->write(cout);
+
+  vector<HTTPHeader> _uriParams;
+  SwiftResult<istream*>* objResult = newObject.swiftGetObjectContent("gholiOBJ",&_uriParams,nullptr);
+  objResult->getResponse()->write(cout);
+  StreamCopier::copyStream(*objResult->getPayload(),std::cout);
 
 }

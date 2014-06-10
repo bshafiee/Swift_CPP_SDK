@@ -19,10 +19,9 @@ namespace Swift {
 template<class T>
 extern SwiftResult<T>* returnNullError(const string &whatsNull);
 
-Container::Container(Account* _account) :
-    account(_account) {
-  // TODO Auto-generated constructor stub
-
+Container::Container(Account* _account,std::string _name) :
+    account(_account),name(_name) {
+  // TODO Auto-generated destructor stub
 }
 
 Container::~Container() {
@@ -30,14 +29,14 @@ Container::~Container() {
 }
 
 SwiftResult<std::istream*>* Container::swiftGetObjects(
-    const std::string &_containerName, HTTPHeader& _formatHeader,
+     HTTPHeader& _formatHeader,
     bool _newest) {
   vector<HTTPHeader> _queryMap;
-  return swiftGetObjects(_containerName, _formatHeader, _queryMap, _newest);
+  return swiftGetObjects(_formatHeader, _queryMap, _newest);
 }
 
 SwiftResult<std::istream*>* Container::swiftGetObjects(
-    const std::string &_containerName, HTTPHeader& _formatHeader,
+     HTTPHeader& _formatHeader,
     std::vector<HTTPHeader>& _queryMap, bool _newest) {
   //Swift Endpoint
   if (account == nullptr)
@@ -68,7 +67,7 @@ SwiftResult<std::istream*>* Container::swiftGetObjects(
     }
   }
 
-  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + name);
   uri.setQuery(queryStream.str());
 
   HTTPClientSession *httpSession = nullptr;
@@ -118,14 +117,12 @@ SwiftResult<std::istream*>* Container::swiftGetObjects(
   return result;
 }
 
-SwiftResult<void*>* Container::swiftCreateContainer(
-    const std::string& _containerName) {
+SwiftResult<void*>* Container::swiftCreateContainer() {
   vector<HTTPHeader> _queryMap;
-  return swiftCreateContainer(_containerName, _queryMap);
+  return swiftCreateContainer( _queryMap);
 }
 
-SwiftResult<void*>* Container::swiftCreateContainer(
-    const std::string& _containerName, std::vector<HTTPHeader>& _queryMap) {
+SwiftResult<void*>* Container::swiftCreateContainer(std::vector<HTTPHeader>& _queryMap) {
   //Swift Endpoint
   if (account == nullptr)
     return returnNullError<void*>("account");
@@ -150,7 +147,7 @@ SwiftResult<void*>* Container::swiftCreateContainer(
     }
   }
 
-  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + name);
   uri.setQuery(queryStream.str());
 
   HTTPClientSession *httpSession = nullptr;
@@ -195,8 +192,7 @@ SwiftResult<void*>* Container::swiftCreateContainer(
   return result;
 }
 
-SwiftResult<void*>* Container::swiftDeleteContainer(
-    const std::string& _containerName) {
+SwiftResult<void*>* Container::swiftDeleteContainer() {
   //Swift Endpoint
   if (account == nullptr)
     return returnNullError<void*>("account");
@@ -212,7 +208,7 @@ SwiftResult<void*>* Container::swiftDeleteContainer(
   reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
 
   //Set URI
-  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + name);
 
   HTTPClientSession *httpSession = nullptr;
   HTTPResponse *httpResponse = new HTTPResponse();
@@ -253,7 +249,7 @@ SwiftResult<void*>* Container::swiftDeleteContainer(
   return result;
 }
 
-SwiftResult<void*>* Container::swiftCreateMetadata(const std::string &_containerName,
+SwiftResult<void*>* Container::swiftCreateMetadata(
     std::vector<std::pair<std::string, std::string> >& _metaData,
     std::vector<HTTPHeader>& _reqMap) {
   //Swift Endpoint
@@ -280,7 +276,7 @@ SwiftResult<void*>* Container::swiftCreateMetadata(const std::string &_container
           *new HTTPHeader("X-Container-Meta-" + _metaData[i].first, _metaData[i].second));
 
   //Set URI
-  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + name);
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
   try {
@@ -318,31 +314,31 @@ SwiftResult<void*>* Container::swiftCreateMetadata(const std::string &_container
   return result;
 }
 
-SwiftResult<void*>* Container::swiftCreateMetadata(const std::string &_containerName,
+SwiftResult<void*>* Container::swiftCreateMetadata(
     std::vector<std::pair<std::string, std::string> >& _metaData) {
   std::vector<HTTPHeader> _reqMap;
-  return swiftCreateMetadata(_containerName,_metaData,_reqMap);
+  return swiftCreateMetadata(_metaData,_reqMap);
 }
 
-SwiftResult<void*>* Container::swiftUpdateMetadata(const std::string &_containerName,
+SwiftResult<void*>* Container::swiftUpdateMetadata(
     std::vector<std::pair<std::string, std::string> >& _metaData) {
   std::vector<HTTPHeader> _reqMap;
-  return swiftUpdateMetadata(_containerName,_metaData,_reqMap);
+  return swiftUpdateMetadata(_metaData,_reqMap);
 }
 
-SwiftResult<void*>* Container::swiftUpdateMetadata(const std::string &_containerName,
+SwiftResult<void*>* Container::swiftUpdateMetadata(
     std::vector<std::pair<std::string, std::string> >& _metaData,
     std::vector<HTTPHeader>& _reqMap) {
-  return swiftCreateMetadata(_containerName,_metaData,_reqMap);
+  return swiftCreateMetadata(_metaData,_reqMap);
 }
 
-SwiftResult<void*>* Container::swiftDeleteMetadata(const std::string &_containerName,
+SwiftResult<void*>* Container::swiftDeleteMetadata(
     std::vector<std::string>& _metaDataKeys) {
   std::vector<HTTPHeader> _reqMap;
-  return swiftDeleteMetadata(_containerName,_metaDataKeys,_reqMap);
+  return swiftDeleteMetadata(_metaDataKeys,_reqMap);
 }
 
-SwiftResult<void*>* Container::swiftDeleteMetadata(const std::string &_containerName,
+SwiftResult<void*>* Container::swiftDeleteMetadata(
     std::vector<std::string>& _metaDataKeys, std::vector<HTTPHeader>& _reqMap) {
   //Swift Endpoint
   Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
@@ -368,7 +364,7 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(const std::string &_container
           *new HTTPHeader("X-Remove-Container-Meta-" + _metaDataKeys[i], "x"));
 
   //Set URI
-  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + name);
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
   try {
@@ -407,8 +403,19 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(const std::string &_container
   return result;
 }
 
-SwiftResult<void*>* Container::swiftShowMetadata(
-    const std::string& _containerName, bool _newest) {
+std::string& Container::getName() {
+  return name;
+}
+
+void Container::setName(const std::string& name) {
+  this->name = name;
+}
+
+Account* Container::getAccount(){
+  return account;
+}
+
+SwiftResult<void*>* Container::swiftShowMetadata(bool _newest) {
   //Swift Endpoint
   Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
   if (swiftEndpoint == nullptr)
@@ -423,7 +430,7 @@ SwiftResult<void*>* Container::swiftShowMetadata(
     reqParamMap->push_back(*new HTTPHeader("X-Newest", "True"));
 
   //Set URI
-  URI uri(swiftEndpoint->getPublicUrl() + "/" + _containerName);
+  URI uri(swiftEndpoint->getPublicUrl() + "/" + name);
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
   try {
