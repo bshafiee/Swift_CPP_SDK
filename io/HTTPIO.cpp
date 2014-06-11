@@ -85,4 +85,31 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
   return session;
 }
 
+Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
+    const std::string& type, std::vector<HTTPHeader>* params,
+    std::istream& inputStream) {
+  HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
+        uri.getPort());
+  HTTPRequest request(type, uri.getPath());
+
+  //Add params
+  if (params != nullptr && params->size() > 0) {
+    vector<HTTPHeader>::iterator it = params->begin();
+    while (it != params->end()) {
+      request.add(it->getKey(), it->getValue());
+      it++;
+    }
+  }
+
+  //write request body
+  ostream &ostream = session->sendRequest(request);
+  if (ostream == nullptr)
+    return nullptr;
+  //Copy input stream to the output stream
+  StreamCopier::copyStream(inputStream,ostream);
+  //ostream << inputStream;
+
+  return session;
+}
+
 } /* namespace Swift */

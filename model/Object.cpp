@@ -342,4 +342,284 @@ SwiftResult<std::istream*>* Object::swiftDeleteObject(
   return result;
 }
 
+SwiftResult<istream*>* Object::swiftCreateMetadata(
+    const std::string& _objectName,
+    map<std::string,std::string> &_metaData,
+    std::vector<HTTPHeader>* _reqMap,bool _keepExistingMetadata) {
+
+  //Keep Existing MetaData
+  if(_keepExistingMetadata) {
+    std::vector<std::pair<std::string, std::string> > *existingMeta = getExistingMetaData(_objectName);
+    if(existingMeta != nullptr && existingMeta->size() > 0)
+      for(uint i =0; i<existingMeta->size();i++)
+        if(_metaData.find(existingMeta->at(i).first) == _metaData.end())
+          _metaData.insert(map<string,string>::value_type(existingMeta->at(i).first,existingMeta->at(i).second));
+  }
+
+  //Swift Endpoint
+  if (container == nullptr)
+    return returnNullError<istream*>("container");
+  Account* account = container->getAccount();
+  if (account == nullptr)
+    return returnNullError<istream*>("account");
+  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<istream*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = account->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  //Add rest of request Parameters
+  if (_reqMap!=nullptr&& _reqMap->size() > 0) {
+    for (uint i = 0; i < _reqMap->size(); i++) {
+      reqParamMap->push_back(_reqMap->at(i));
+    }
+  }
+
+  //Add Actual metadata
+  if (_metaData.size() > 0)
+    for (map<string,string>::iterator it = _metaData.begin(); it != _metaData.end(); it++)
+      reqParamMap->push_back(
+          *new HTTPHeader("X-Object-Meta-" + it->first, it->second));
+
+  //Set URI
+  URI uri(
+        swiftEndpoint->getPublicUrl() + "/" + container->getName() + "/"
+            + _objectName);
+  //Creating HTTP Session
+  HTTPResponse *httpResponse = new HTTPResponse();
+  istream* resultStream = nullptr;
+  try {
+    /** This operation does not accept a request body. **/
+    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_POST,reqParamMap);
+    resultStream = &httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<istream*> *result = new SwiftResult<istream*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 202:
+   *  Success. HTTP_ACCEPTED
+   */
+  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
+    SwiftResult<istream*> *result = new SwiftResult<istream*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<istream*> *result = new SwiftResult<istream*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(resultStream);
+  return result;
+}
+
+SwiftResult<std::istream*>* Object::swiftUpdateMetadata(
+    const std::string& _objectName,
+    std::map<std::string,std::string> &_metaData,
+    std::vector<HTTPHeader>* _reqMap) {
+  return swiftCreateMetadata(_objectName,_metaData,_reqMap);
+}
+
+SwiftResult<istream*>* Object::swiftDeleteMetadata(const std::string& _objectName,
+    std::vector<std::string>& _metaDataKeys) {
+  //Existing MetaData
+  map<string, string> metaData;
+  //Keep Existing MetaData
+  std::vector<std::pair<std::string, std::string> > *existingMeta = getExistingMetaData(_objectName);
+  if(existingMeta != nullptr && existingMeta->size() > 0)
+    for(uint i =0; i<existingMeta->size();i++)
+      metaData.insert(make_pair(existingMeta->at(i).first,existingMeta->at(i).second));
+
+  for(uint i =0; i<_metaDataKeys.size();i++) {
+    map<string, string>::iterator it = metaData.find(_metaDataKeys[i]);
+    if(it != metaData.end())
+      metaData.erase(it);
+  }
+
+  return swiftCreateMetadata(_objectName,metaData,nullptr,false);
+}
+
+SwiftResult<void*>* Object::swiftCreateReplaceObject(
+    const std::string& _objectName, std::istream &inputStream, std::vector<HTTPHeader>* _uriParams,
+    std::vector<HTTPHeader>* _reqMap) {
+  //Swift Endpoint
+  if (container == nullptr)
+    return returnNullError<void*>("container");
+  Account* account = container->getAccount();
+  if (account == nullptr)
+    return returnNullError<void*>("account");
+  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<void*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = account->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+
+  //Set Transfer-Encoding: chunked
+  reqParamMap->push_back(*new HTTPHeader("Transfer-Encoding", "chunked"));
+
+  //add request params
+  if (_reqMap != nullptr)
+    for (uint i = 0; i < _reqMap->size(); i++)
+      reqParamMap->push_back(_reqMap->at(i));
+  //Create appropriate URI
+  ostringstream queryStream;
+  queryStream << "?";
+  if (_uriParams != nullptr && _uriParams->size() > 0) {
+    for (uint i = 0; i < _uriParams->size(); i++) {
+      if (i > 0)
+        queryStream << ",";
+      queryStream << _uriParams->at(i).getQueryValue();
+    }
+  }
+
+  URI uri(
+      swiftEndpoint->getPublicUrl() + "/" + container->getName() + "/"
+          + _objectName);
+  uri.setQuery(queryStream.str());
+
+  HTTPClientSession *httpSession = nullptr;
+  HTTPResponse *httpResponse = new HTTPResponse();
+  try {
+    /** This operation does not accept a request body. **/
+    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_PUT, reqParamMap, inputStream);
+    //Receive Response
+    httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 201:
+   *  Normal response code
+   *
+   * Error response codes:
+   *  timeout (408),
+   *  lengthRequired (411),
+   *  unprocessableEntity (422)
+   */
+  if (httpResponse->getStatus() != HTTPResponse::HTTP_OK) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<void*> *result = new SwiftResult<void*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(nullptr);
+  return result;
+}
+
+SwiftResult<void*>* Object::swiftShowMetadata(const std::string& _objectName,
+    std::vector<HTTPHeader>* _uriParams, bool _newest) {
+  //Swift Endpoint
+  if (container == nullptr)
+    return returnNullError<void*>("container");
+  Account* account = container->getAccount();
+  if (account == nullptr)
+    return returnNullError<void*>("account");
+  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<void*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = account->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  if (_newest)
+    reqParamMap->push_back(*new HTTPHeader("X-Newest", "True"));
+
+  //Set URI
+  URI uri(
+        swiftEndpoint->getPublicUrl() + "/" + container->getName() + "/"
+            + _objectName);
+  //Creating HTTP Session
+  HTTPResponse *httpResponse = new HTTPResponse();
+  try {
+    /** This operation does not accept a request body. **/
+    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_HEAD,
+        reqParamMap);
+    httpSession->receiveResponse(*httpResponse);
+  } catch (Exception &e) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  /**
+   * Check HTTP return code
+   * 200 through 299 indicates success.
+   * 204:
+   *  Success. The response body is empty.
+   */
+  if (httpResponse->getStatus() < 200 || httpResponse->getStatus() > 209) {
+    SwiftResult<void*> *result = new SwiftResult<void*>();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    result->setError(error);
+    result->setResponse(httpResponse);
+    result->setPayload(nullptr);
+    return result;
+  }
+  //Everything seems fine
+  SwiftResult<void*> *result = new SwiftResult<void*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(httpResponse);
+  result->setPayload(nullptr);
+  return result;
+}
+
+std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData(const std::string& _objectName) {
+  SwiftResult<void*>* metadata = this->swiftShowMetadata(_objectName,nullptr, false);
+  if(metadata == nullptr)
+    return nullptr;
+  if(metadata->getResponse() == nullptr)
+      return nullptr;
+  std::vector<std::pair<std::string, std::string> >* result = new std::vector<std::pair<std::string, std::string> >();
+  NameValueCollection::ConstIterator it = metadata->getResponse()->begin();
+
+  while(it != metadata->getResponse()->end()) {
+    string key = it->first;
+    if(it->first.find("X-Object-Meta-") != string::npos)
+    {
+      key = it->first.substr(strlen("X-Object-Meta-"));
+      result->push_back(make_pair(key,it->second));
+    }
+    ++it;
+  }
+
+  return result;
+}
+
 } /* namespace Swift */

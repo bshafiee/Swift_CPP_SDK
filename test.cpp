@@ -11,6 +11,8 @@
 #include "model/Account.h"
 #include "model/Container.h"
 #include "model/Object.h"
+#include <sstream>      // ostringstream
+
 
 
 using namespace Poco::Net;
@@ -18,60 +20,16 @@ using namespace Poco;
 using namespace std;
 using namespace Swift;
 
+
+struct membuf : std::streambuf
+{
+    membuf(char* begin, char* end) {
+        this->setg(begin, begin, end);
+    }
+};
+
 int main(int argc, char** argv)
 {
-  /*Poco::Net::SocketAddress sa("www.appinf.com", 80);
-  Poco::Net::StreamSocket socket(sa);
-  Poco::Net::SocketStream str(socket);*/
-
-  /*HTTPClientSession session("www.google.com");
-  HTTPRequest request(HTTPRequest::HTTP_GET);
-  session.sendRequest(request);
-
-  HTTPResponse response;
-  std::istream& rs = session.receiveResponse(response);
-  StreamCopier::copyStream(rs,std::cout);
-
-
-  Json::Value root;
-  Json::Reader reader;
-  const char *temp = "{\"firstName\": \"John\",\"lastName\": \"Smith\"}";
-  reader.parse(temp,root,false);
-  std::string encoding = root.get("firstName", "Not Found" ).asString();
-  std::cout<<std::endl<<encoding<<std::endl;
-
-  Json::Value mydoc;
-  Json::Value mydoc2;
-  mydoc2["key1"] = "sdfsdf";
-  //key1 {"sdfds",{"ssf"}}
-
-  mydoc["key1"] = {};
-  mydoc["key1"]["name"] = "jafar";
-  mydoc["key2"] = "value 2";
-  mydoc["key3"]["key3_1"] = "value 1_1";
-  mydoc["key3"]["key31"] = "value 1_1";
-  mydoc["key1"]["sdf"] = "sdfsdf";
-  Json::StyledWriter writer;
-  // Make a new JSON document for the configuration. Preserve original comments.
-  std::string outputConfig = writer.write( mydoc );
-
-  // And you can write to a stream, using the StyledWriter automatically.
-  std::cout << mydoc;
-  */
-
-  /*
-    {
-      "auth":
-        {
-          "tenantName": "BehroozProject",
-          "passwordCredentials":
-            {
-              "username": "behrooz",
-              "password": "behrooz"
-            }
-        }
-    }
-   */
   AuthenticationInfo info;
   info.username = "behrooz";
   info.password = "behrooz";
@@ -132,9 +90,10 @@ int main(int argc, char** argv)
   //Create a container
   Container container(result->getPayload());
   container.setName("Container2");
+
   //Create an object
   Object newObject(&container);
-  string data = "Hello Sexy World :)";
+  /*string data = "Hello Sexy World :)";
   SwiftResult<void*>* createResult = newObject.swiftCreateReplaceObject("gholiOBJ",data.c_str(),data.size(),true);
   createResult->getResponse()->write(cout);
 
@@ -147,6 +106,52 @@ int main(int argc, char** argv)
 
   vector<HTTPHeader> _uriParams;
   SwiftResult<istream*>* objResult = newObject.swiftGetObjectContent("gholiOBJ",&_uriParams,nullptr);
+  objResult->getResponse()->write(cout);
+  StreamCopier::copyStream(*objResult->getPayload(),std::cout);
+
+  map<string, string> metaData;
+  metaData.insert(make_pair("Key1","metaData Gholi Value 1"));
+  SwiftResult<istream*>* createMetaResult = newObject.swiftCreateMetadata("gholiOBJ",metaData);
+  createMetaResult->getResponse()->write(cout);
+  if(createMetaResult->getPayload()!=nullptr)
+    StreamCopier::copyStream(*createMetaResult->getPayload(),std::cout);
+
+  cout<<endl<<endl<<"MetaDataResult:"<<endl;
+  SwiftResult<void*>* metaDataShowResult = newObject.swiftShowMetadata("gholiOBJ");
+  metaDataShowResult->getResponse()->write(cout);
+  cout<<endl<<endl;
+
+  metaData.clear();
+  metaData.insert(make_pair("Key2","metaData Gholi Value 2"));
+  newObject.swiftCreateMetadata("gholiOBJ",metaData);
+
+
+  metaData.clear();
+  metaData.insert(make_pair("Key3","Value 3"));
+  newObject.swiftCreateMetadata("gholiOBJ",metaData);
+
+  vector<string> deleteVec;
+  deleteVec.push_back("Key3");
+  deleteVec.push_back("Key1");
+  deleteVec.push_back("Key2");
+  deleteVec.push_back("Key4");
+  newObject.swiftDeleteMetadata("gholiOBJ",deleteVec);
+
+  cout<<endl<<endl<<"MetaDataResult:"<<endl;
+  metaDataShowResult = newObject.swiftShowMetadata("gholiOBJ");
+  metaDataShowResult->getResponse()->write(cout);
+  cout<<endl<<endl;*/
+
+
+  char data[] = "hello fucking world";
+  membuf sbuf(data, data + sizeof(data));
+  std::istream in(&sbuf);
+  //stream.rdbuf()->pubsetbuf(data,strlen(data));
+  //_objectName, inputStream, _uriParams,_reqMap)
+  SwiftResult<void*>* createResult = newObject.swiftCreateReplaceObject("gholiOBJ",in,nullptr,nullptr);
+  createResult->getResponse()->write(cout);
+
+  SwiftResult<istream*>* objResult = newObject.swiftGetObjectContent("gholiOBJ",nullptr,nullptr);
   objResult->getResponse()->write(cout);
   StreamCopier::copyStream(*objResult->getPayload(),std::cout);
 
