@@ -20,6 +20,8 @@
 #include <iostream>
 #include <vector>
 #include "../header/Header.h"
+#include "../interface/SwiftResult.h"
+#include "../model/Account.h"
 
 namespace Swift {
 
@@ -35,5 +37,9 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
     const std::string &type, std::vector<HTTPHeader> *params,
     std::istream &inputStream);
 
+template<class T>
+SwiftResult<T>* doSwiftTransaction(Account *_account,Poco::URI *_uri,std::string *_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap);
+
 } /* namespace Swift */
+
 #endif /* HTTPIO_H_ */

@@ -155,4 +155,7 @@ int main(int argc, char** argv)
   objResult->getResponse()->write(cout);
   StreamCopier::copyStream(*objResult->getPayload(),std::cout);
 
+
+  doSwiftTransaction<void*>(nullptr,nullptr,nullptr,nullptr,nullptr);
+
 }
