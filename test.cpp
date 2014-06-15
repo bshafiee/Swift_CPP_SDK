@@ -151,11 +151,16 @@ int main(int argc, char** argv)
   SwiftResult<void*>* createResult = newObject.swiftCreateReplaceObject("gholiOBJ",in,nullptr,nullptr);
   createResult->getResponse()->write(cout);
 
+  cout<<endl<<endl;
+  SwiftResult<void*>* copyResult = newObject.swiftCopyObject("gholiOBJ","COpyGholi",container,nullptr);
+  copyResult->getResponse()->write(cout);
+  cout<<endl<<endl;
+
   SwiftResult<istream*>* objResult = newObject.swiftGetObjectContent("gholiOBJ",nullptr,nullptr);
   objResult->getResponse()->write(cout);
   StreamCopier::copyStream(*objResult->getPayload(),std::cout);
 
 
-  doSwiftTransaction<void*>(nullptr,nullptr,nullptr,nullptr,nullptr);
+  //doSwiftTransaction<void*>(nullptr,nullptr,"",nullptr,nullptr,nullptr);
 
 }

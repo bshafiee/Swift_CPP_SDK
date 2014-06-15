@@ -125,15 +125,15 @@ inline SwiftResult<T>* returnNullError(const string &whatsNull) {
 }
 
 /** Template instantiation for common used types **/
-//template
-//SwiftResult<istream*>* doSwiftTransaction(Account *_account,URI &_uri,string &_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap, vector<int> _validHTTPCodes);
+template
+SwiftResult<istream*>* doSwiftTransaction<istream*>(Account *_account,string &_uriPath,const string &_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap,std::vector<int> *_httpValidCodes);//{}
 
 template
-SwiftResult<void*>* doSwiftTransaction<void*>(Account *_account,URI *_uri,string *_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap);//{}
+SwiftResult<void*>* doSwiftTransaction<void*>(Account *_account,string &_uriPath,const string &_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap,std::vector<int> *_httpValidCodes);//{}
 
 
 template<class T>
-SwiftResult<T>* doSwiftTransaction(Account *_account,URI *_uri,string *_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap) {
+SwiftResult<T>* doSwiftTransaction(Account *_account,string &_uriPath,const string &_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap,std::vector<int> *_httpValidCodes) {
   if (_account == nullptr)
     return returnNullError<T>("account");
   Endpoint* swiftEndpoint = _account->getSwiftService()->getFirstEndpoint();
@@ -152,18 +152,22 @@ SwiftResult<T>* doSwiftTransaction(Account *_account,URI *_uri,string *_method,s
     }
   }
 
+  URI uri(swiftEndpoint->getPublicUrl());
+  if(uri.getPath().size() > 0)
+    uri.setPath(uri.getPath() + "/" + _uriPath);
+  else
+    uri.setPath(_uriPath);
+
   if(_uriParams!=nullptr && _uriParams->size()>0) {
     //Create appropriate URI
     ostringstream queryStream;
     queryStream << "?";
-    if (_uriParams != nullptr && _uriParams->size() > 0) {
-      for (uint i = 0; i < _uriParams->size(); i++) {
-        if (i > 0)
-          queryStream << ",";
-        queryStream << _uriParams->at(i).getQueryValue();
-      }
+    for (uint i = 0; i < _uriParams->size(); i++) {
+      if (i > 0)
+        queryStream << ",";
+      queryStream << _uriParams->at(i).getQueryValue();
     }
-    _uri->setQuery(queryStream.str());
+    uri.setQuery(queryStream.str());
   }
 
   //Creating HTTP Session
@@ -171,7 +175,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account,URI *_uri,string *_method,s
   istream* resultStream = nullptr;
   try {
     /** This operation does not accept a request body. **/
-    HTTPClientSession *httpSession = doHTTPIO(*_uri, HTTPRequest::HTTP_POST,reqParamMap);
+    HTTPClientSession *httpSession = doHTTPIO(uri, _method,reqParamMap);
     resultStream = &httpSession->receiveResponse(*httpResponse);
   } catch (Exception &e) {
     SwiftResult<T> *result = new SwiftResult<T>();
@@ -187,8 +191,13 @@ SwiftResult<T>* doSwiftTransaction(Account *_account,URI *_uri,string *_method,s
    * Check HTTP return code
    */
   bool valid = false;
-  //for(uint i=0;i<_)
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
+  for(uint i=0;i<_httpValidCodes->size();i++)
+    if(_httpValidCodes->at(i) == httpResponse->getStatus()) {
+      valid = true;
+      break;
+    }
+
+  if (!valid) {
     SwiftResult<T> *result = new SwiftResult<T>();
     SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
     result->setError(error);
@@ -196,6 +205,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account,URI *_uri,string *_method,s
     result->setPayload(nullptr);
     return result;
   }
+
   //Everything seems fine
   SwiftResult<T> *result = new SwiftResult<T>();
   result->setError(SWIFT_OK);

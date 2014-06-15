@@ -33,149 +33,31 @@ Object::~Object() {
 SwiftResult<istream*>* Object::swiftGetObjectContent(
     const std::string &_objectName, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap) {
-  //Swift Endpoint
+  //Check Container
   if (container == nullptr)
     return returnNullError<istream*>("container");
-  Account* account = container->getAccount();
-  if (account == nullptr)
-    return returnNullError<istream*>("account");
-  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<istream*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = account->getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-  //add request params
-  if (_reqMap != nullptr)
-    for (uint i = 0; i < _reqMap->size(); i++)
-      reqParamMap->push_back(_reqMap->at(i));
-  //Create appropriate URI
-  ostringstream queryStream;
-  queryStream << "?";
-  if (_uriParams != nullptr && _uriParams->size() > 0) {
-    for (uint i = 0; i < _uriParams->size(); i++) {
-      if (i > 0)
-        queryStream << ",";
-      queryStream << _uriParams->at(i).getQueryValue();
-    }
-  }
-
-  URI uri(
-      swiftEndpoint->getPublicUrl() + "/" + container->getName() + "/"
-          + _objectName);
-  uri.setQuery(queryStream.str());
-
-  HTTPClientSession *httpSession = nullptr;
-  HTTPResponse *httpResponse = new HTTPResponse();
-  istream* inputStream = nullptr;
-  try {
-    /** This operation does not accept a request body. **/
-    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_GET, reqParamMap);
-    //Receive Data
-    inputStream = &httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<istream*> *result = new SwiftResult<istream*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-
+  //Path
+  string path = container->getName() + "/" + _objectName;
   /**
-   * Check HTTP return code
-   * 200:
-   *  Success. The response body shows object content
+   * Valid HTTP return codes for this operation: 200
+   * Success. The response body shows object content
    */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_OK) {
-    SwiftResult<istream*> *result = new SwiftResult<istream*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-  //Everything seems fine
-  SwiftResult<istream*> *result = new SwiftResult<istream*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(inputStream);
-  return result;
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_OK);
+
+  //Do swift transaction
+  return doSwiftTransaction<istream*>(container->getAccount(),path,HTTPRequest::HTTP_GET,_uriParams,_reqMap,&validHTTPCodes);
 }
 
 SwiftResult<void*>* Object::swiftCreateReplaceObject(
     const std::string& _objectName, const char* _data, ulong _size,
     bool _calculateETag, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap) {
-  //Swift Endpoint
+  //Check Container
   if (container == nullptr)
     return returnNullError<void*>("container");
-  Account* account = container->getAccount();
-  if (account == nullptr)
-    return returnNullError<void*>("account");
-  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<void*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = account->getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-
-  //Calculate ETag if requested
-  if (_calculateETag) {
-    MD5Engine md5;
-    md5.reset();
-    md5.update(_data, _size);
-    string digestString(DigestEngine::digestToHex(md5.digest()));
-    //Set Header
-    reqParamMap->push_back(*new HTTPHeader("ETag", digestString));
-    cout << "inja:\t" << digestString << endl;
-  }
-
-  //add request params
-  if (_reqMap != nullptr)
-    for (uint i = 0; i < _reqMap->size(); i++)
-      reqParamMap->push_back(_reqMap->at(i));
-  //Create appropriate URI
-  ostringstream queryStream;
-  queryStream << "?";
-  if (_uriParams != nullptr && _uriParams->size() > 0) {
-    for (uint i = 0; i < _uriParams->size(); i++) {
-      if (i > 0)
-        queryStream << ",";
-      queryStream << _uriParams->at(i).getQueryValue();
-    }
-  }
-
-  URI uri(
-      swiftEndpoint->getPublicUrl() + "/" + container->getName() + "/"
-          + _objectName);
-  uri.setQuery(queryStream.str());
-
-  HTTPClientSession *httpSession = nullptr;
-  HTTPResponse *httpResponse = new HTTPResponse();
-  try {
-    /** This operation does not accept a request body. **/
-    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_PUT, reqParamMap, _data,
-        _size);
-    //Receive Response
-    httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-
+  //Path
+  string path = container->getName() + "/" + _objectName;
   /**
    * Check HTTP return code
    * 201:
@@ -186,92 +68,52 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(
    *  lengthRequired (411),
    *  unprocessableEntity (422)
    */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_OK) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_CREATED);
+
+  //Calculate ETag if requested
+  if (_calculateETag) {
+    MD5Engine md5;
+    md5.reset();
+    md5.update(_data, _size);
+    string digestString(DigestEngine::digestToHex(md5.digest()));
+    //Set Header
+    if(_reqMap == nullptr)
+      _reqMap = new vector<HTTPHeader>();
+    _reqMap->push_back(*new HTTPHeader("ETag", digestString));
+    cout << "inja:\t" << digestString << endl;
   }
-  //Everything seems fine
-  SwiftResult<void*> *result = new SwiftResult<void*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(nullptr);
-  return result;
+
+  //Do swift transaction
+  return doSwiftTransaction<void*>(container->getAccount(),path,HTTPRequest::HTTP_PUT,_uriParams,_reqMap,&validHTTPCodes);
 }
 
 SwiftResult<void*>* Object::swiftCopyObject(const std::string& _srcObjectName,
     const std::string& _dstObjectName, Container& _dstContainer,
     std::vector<HTTPHeader>* _reqMap) {
-  //Swift Endpoint
+  //Check Container
   if (container == nullptr)
     return returnNullError<void*>("container");
-  Account* account = container->getAccount();
-  if (account == nullptr)
-    return returnNullError<void*>("account");
-  Endpoint* swiftEndpoint = account->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<void*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = account->getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-
-  //Add Destination token
-  reqParamMap->push_back(
-      *new HTTPHeader("Destination",
-          _dstContainer.getName() + "/" + _dstObjectName));
-
-  //add request params
-  if (_reqMap != nullptr)
-    for (uint i = 0; i < _reqMap->size(); i++)
-      reqParamMap->push_back(_reqMap->at(i));
-
-  URI uri(
-      swiftEndpoint->getPublicUrl() + "/" + container->getName() + "/"
-          + _srcObjectName);
-
-  HTTPClientSession *httpSession = nullptr;
-  HTTPResponse *httpResponse = new HTTPResponse();
-  try {
-    /** This operation does not accept a request body. **/
-    httpSession = doHTTPIO(uri, "COPY", reqParamMap);
-    //Receive Response
-    httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-
+  //Path
+  string path = container->getName() + "/" + _srcObjectName;
   /**
    * Check HTTP return code
    * 201:
    *  Normal response code
-   *
    */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_OK) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-  //Everything seems fine
-  SwiftResult<void*> *result = new SwiftResult<void*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(nullptr);
-  return result;
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_OK);
+
+
+  //Add Destination token
+  if(_reqMap == nullptr)
+    _reqMap = new vector<HTTPHeader>();
+  _reqMap->push_back(
+      *new HTTPHeader("Destination",
+          _dstContainer.getName() + "/" + _dstObjectName));
+
+  //Do swift transaction
+  return doSwiftTransaction<void*>(container->getAccount(),path,"COPY",nullptr,_reqMap,&validHTTPCodes);
 }
 
 SwiftResult<std::istream*>* Object::swiftDeleteObject(

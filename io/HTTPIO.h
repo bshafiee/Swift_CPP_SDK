@@ -38,7 +38,9 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI &uri,
     std::istream &inputStream);
 
 template<class T>
-SwiftResult<T>* doSwiftTransaction(Account *_account,Poco::URI *_uri,std::string *_method,std::vector<HTTPHeader>* _uriParams,std::vector<HTTPHeader>* _reqMap);
+SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
+    const std::string &_method, std::vector<HTTPHeader>* _uriParams,
+    std::vector<HTTPHeader>* _reqMap, std::vector<int> *_httpValidCodes);
 
 } /* namespace Swift */
 

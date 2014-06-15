@@ -24,13 +24,13 @@ LIBS =-lPocoUtild -lPocoUtil -lPocoXML -lPocoNet -lPocoNetd -lPocoFoundation -lP
 
 TARGET =	SwiftSDK
 
-
+CXX=clang++
 all:	$(TARGET)
 
 $(TARGET):	$(CXXOBJS) $(COBJS)
 #	$(CXX) -o $(TARGET) $(CXXOBJS) $(LIBS) $(COBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(CXXOBJS) $(LIBS)
-	
+
 #$(COBJS): %.o: %.c
 #	$(CC) $(CFLAGS) -c $< -o $@
 
