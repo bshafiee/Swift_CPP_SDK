@@ -135,12 +135,12 @@ int main(int argc, char** argv)
   deleteVec.push_back("Key1");
   deleteVec.push_back("Key2");
   deleteVec.push_back("Key4");
-  newObject.swiftDeleteMetadata("gholiOBJ",deleteVec);
+  //newObject.swiftDeleteMetadata("gholiOBJ",deleteVec);
 
   cout<<endl<<endl<<"MetaDataResult:"<<endl;
   metaDataShowResult = newObject.swiftShowMetadata("gholiOBJ");
   metaDataShowResult->getResponse()->write(cout);
-  cout<<endl<<endl;*/
+  cout<<endl<<endl;
 
 
   char data[] = "hello fucking world";
@@ -156,11 +156,16 @@ int main(int argc, char** argv)
   copyResult->getResponse()->write(cout);
   cout<<endl<<endl;
 
+  cout<<endl<<endl;
+  SwiftResult<istream*>* deleteResult = newObject.swiftDeleteObject("COpyGholi",true);
+  deleteResult->getResponse()->write(cout);
+  cout<<endl<<endl;
+
   SwiftResult<istream*>* objResult = newObject.swiftGetObjectContent("gholiOBJ",nullptr,nullptr);
   objResult->getResponse()->write(cout);
-  StreamCopier::copyStream(*objResult->getPayload(),std::cout);
+  StreamCopier::copyStream(*objResult->getPayload(),std::cout);*/
 
 
-  //doSwiftTransaction<void*>(nullptr,nullptr,"",nullptr,nullptr,nullptr);
+  //doSwiftTransaction<void*>(nullptr,nullptr,"",nullptr,nullptr,nullptr);*/
 
 }
