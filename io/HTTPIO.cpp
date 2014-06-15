@@ -28,7 +28,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
       it++;
     }
   }
-  //request.write(cout);
+  //cout<<endl<<"Request:"<<endl;request.write(cout);cout<<endl;
   session->sendRequest(request);
   return session;
 }
@@ -163,6 +163,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   if (_reqMap!=nullptr&& _reqMap->size() > 0) {
     for (uint i = 0; i < _reqMap->size(); i++) {
       reqParamMap->push_back(_reqMap->at(i));
+      //cout<<_reqMap->at(i).getQueryValue()<<endl;
     }
   }
 
@@ -175,13 +176,14 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   if(_uriParams!=nullptr && _uriParams->size()>0) {
     //Create appropriate URI
     ostringstream queryStream;
-    queryStream << "?";
+    //queryStream << "?";
     for (uint i = 0; i < _uriParams->size(); i++) {
       if (i > 0)
         queryStream << ",";
       queryStream << _uriParams->at(i).getQueryValue();
     }
     uri.setQuery(queryStream.str());
+    //cout<<uri.toString()<<endl;;
   }
 
   //Creating HTTP Session

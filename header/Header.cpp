@@ -27,8 +27,8 @@ std::string HTTPHeader::getQueryValue() {
 }
 
 /** Common HTTP Headers **/
-HTTPHeader HEADER_FORMAT_APPLICATION_JSON("format", "application/json");
-HTTPHeader HEADER_FORMAT_APPLICATION_XML("format", "application/xml");
+HTTPHeader HEADER_FORMAT_APPLICATION_JSON("format", "json");
+HTTPHeader HEADER_FORMAT_APPLICATION_XML("format", "xml");
 HTTPHeader HEADER_FORMAT_TEXT_XML("format", "text/xml");
 
 } /* namespace Swift */

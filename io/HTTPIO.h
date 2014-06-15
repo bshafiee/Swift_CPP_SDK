@@ -41,8 +41,8 @@ template<class T>
 SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     const std::string &_method, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap, std::vector<int> *_httpValidCodes,
-    const char *bodyReqBuffer, ulong size, std::string *contentType,
-    std::istream* bodyReqStream);
+    const char *bodyReqBuffer=nullptr, ulong size=0, std::string *contentType=nullptr,
+    std::istream* bodyReqStream=nullptr);
 
 } /* namespace Swift */
 

@@ -62,11 +62,30 @@ int main(int argc, char** argv)
   SwiftResult<void*>* metaDataRes = result->getPayload()->swiftShowMetadata();
   cout<<endl<<endl;
   metaDataRes->getResponse()->write(cout);
+*/
+  Container mcontainer(result->getPayload());
+  mcontainer.setName("Container2");
+  vector<pair<string, string> > metaData;
+  metaData.push_back(make_pair("metaData1key45767","metaData2value"));
+  SwiftResult<void*>* createRes = mcontainer.swiftCreateMetadata(metaData);
+  createRes->getResponse()->write(cout);
 
-  Container container(result->getPayload());
-  SwiftResult<istream*>* containerDetails = container.swiftGetObjects("bcontainer");
-  StreamCopier::copyStream(*containerDetails->getPayload(),cout);
+  SwiftResult<void*>* metaDataRes = mcontainer.swiftShowMetadata();
+  cout<<endl<<endl;
+  metaDataRes->getResponse()->write(cout);
 
+  vector<string> keys;
+  keys.push_back("metaData1key45767");
+  keys.push_back("metaData1key");
+  mcontainer.swiftDeleteMetadata(keys);
+
+  metaDataRes = mcontainer.swiftShowMetadata();
+  cout<<endl<<endl;
+  metaDataRes->getResponse()->write(cout);
+
+
+
+/*
   Container container(result->getPayload());
   SwiftResult<void*>* containerDetails = container.swiftDeleteContainer("Container2");
   containerDetails->getResponse()->write(cout);
@@ -167,5 +186,7 @@ int main(int argc, char** argv)
 
 
   //doSwiftTransaction<void*>(nullptr,nullptr,"",nullptr,nullptr,nullptr);*/
+
+  cout<<endl<<endl;;
 
 }

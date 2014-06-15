@@ -25,28 +25,21 @@ public:
   SwiftResult<std::istream*>* swiftGetObjects(HTTPHeader &_formatHeader,
       std::vector<HTTPHeader> &_queryMap, bool _newest);
 
-  SwiftResult<void*>* swiftCreateContainer();
-  SwiftResult<void*>* swiftCreateContainer(std::vector<HTTPHeader> &_queryMap);
+  SwiftResult<void*>* swiftCreateContainer(std::vector<HTTPHeader> *_reqMap=nullptr);
 
   SwiftResult<void*>* swiftDeleteContainer();
 
   SwiftResult<void*>* swiftCreateMetadata(
-      std::vector<std::pair<std::string, std::string>> &_metaData);
-  SwiftResult<void*>* swiftCreateMetadata(
       std::vector<std::pair<std::string, std::string>> &_metaData,
-      std::vector<HTTPHeader> &_reqMap);
+      std::vector<HTTPHeader> *_reqMap=nullptr);
 
   SwiftResult<void*>* swiftUpdateMetadata(
-      std::vector<std::pair<std::string, std::string>> &_metaData);
-  SwiftResult<void*>* swiftUpdateMetadata(
       std::vector<std::pair<std::string, std::string>> &_metaData,
-      std::vector<HTTPHeader> &_reqMap);
+      std::vector<HTTPHeader> *_reqMap=nullptr);
 
-  SwiftResult<void*>* swiftDeleteMetadata(
-      std::vector<std::string> &_metaDataKeys);
   SwiftResult<void*>* swiftDeleteMetadata(
       std::vector<std::string> &_metaDataKeys,
-      std::vector<HTTPHeader> &_reqMap);
+      std::vector<HTTPHeader> *_reqMap=nullptr);
 
   SwiftResult<void*>* swiftShowMetadata(bool _newest = false);
 
