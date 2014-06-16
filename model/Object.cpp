@@ -72,22 +72,31 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
   validHTTPCodes.push_back(HTTPResponse::HTTP_CREATED);
 
   //Calculate ETag if requested
+  bool shouldDelete = false;
   if (_calculateETag) {
     MD5Engine md5;
     md5.reset();
     md5.update(_data, _size);
     string digestString(DigestEngine::digestToHex(md5.digest()));
     //Set Header
-    if (_reqMap == nullptr)
+    if (_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     _reqMap->push_back(*new HTTPHeader("ETag", digestString));
     cout << "inja:\t" << digestString << endl;
   }
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(container->getAccount(), path,
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(container->getAccount(), path,
       HTTPRequest::HTTP_PUT, _uriParams, _reqMap, &validHTTPCodes, _data, _size,
       nullptr, nullptr);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _reqMap;
+    return result;
+  }
 }
 
 SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
@@ -106,15 +115,24 @@ SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
   validHTTPCodes.push_back(HTTPResponse::HTTP_OK);
 
   //Add Destination token
-  if (_reqMap == nullptr)
+  bool shouldDelete = false;
+  if (_reqMap == nullptr) {
     _reqMap = new vector<HTTPHeader>();
+    shouldDelete = true;
+  }
   _reqMap->push_back(
       *new HTTPHeader("Destination",
           _dstContainer.getName() + "/" + _dstObjectName));
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(container->getAccount(), path, "COPY",
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(container->getAccount(), path, "COPY",
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _reqMap;
+    return result;
+  }
 }
 
 SwiftResult<std::istream*>* Object::swiftDeleteObject(bool _multipartManifest) {
@@ -174,9 +192,12 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
   }
 
   //Add Actual metadata
+  bool shouldDelete = false;
   if (_metaData.size() > 0) {
-    if (_reqMap == nullptr)
+    if (_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     for (map<string, string>::iterator it = _metaData.begin();
         it != _metaData.end(); it++)
       _reqMap->push_back(
@@ -184,9 +205,15 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
   }
 
   //Do swift transaction
-  return doSwiftTransaction<istream*>(container->getAccount(), path,
+  SwiftResult<istream*>* result = doSwiftTransaction<istream*>(container->getAccount(), path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
       nullptr, nullptr);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _reqMap;
+    return result;
+  }
 }
 
 SwiftResult<std::istream*>* Object::swiftUpdateMetadata(
@@ -237,14 +264,23 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(std::istream &inputStream,
   validHTTPCodes.push_back(HTTPResponse::HTTP_CREATED);
 
   //Set Transfer-Encoding: chunked
-  if (_reqMap == nullptr)
+  bool shouldDelete = false;
+  if (_reqMap == nullptr) {
     _reqMap = new vector<HTTPHeader>();
+    shouldDelete = true;
+  }
   _reqMap->push_back(*new HTTPHeader("Transfer-Encoding", "chunked"));
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(container->getAccount(), path,
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(container->getAccount(), path,
       HTTPRequest::HTTP_PUT, _uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
       nullptr, &inputStream);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _reqMap;
+    return result;
+  }
 }
 
 SwiftResult<void*>* Object::swiftShowMetadata(

@@ -57,14 +57,23 @@ SwiftResult<std::istream*>* Container::swiftGetObjects(
   if (_newest)
     _reqMap.push_back(*new HTTPHeader("X-Newest", "True"));
   //Push Header Format
-  if (_uriParam == nullptr)
+  bool shouldDelete = false;
+  if (_uriParam == nullptr) {
     _uriParam = new vector<HTTPHeader>();
+    shouldDelete = true;
+  }
   _uriParam->push_back(_formatHeader);
 
   //Do swift transaction
-  return doSwiftTransaction<istream*>(this->account, path,
+  SwiftResult<istream*> *result = doSwiftTransaction<istream*>(this->account, path,
       HTTPRequest::HTTP_GET, _uriParam, &_reqMap, &validHTTPCodes, nullptr, 0,
       nullptr, nullptr);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _uriParam;
+    return result;
+  }
 }
 
 SwiftResult<void*>* Container::swiftCreateContainer(
@@ -130,9 +139,12 @@ SwiftResult<void*>* Container::swiftCreateMetadata(
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Add Actual metadata
+  bool shouldDelete = false;
   if (_metaData.size() > 0) {
-    if (_reqMap == nullptr)
+    if (_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     for (uint i = 0; i < _metaData.size(); i++)
       _reqMap->push_back(
           *new HTTPHeader("X-Container-Meta-" + _metaData[i].first,
@@ -140,8 +152,14 @@ SwiftResult<void*>* Container::swiftCreateMetadata(
   }
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+  if(!shouldDelete)
+      return result;
+    else {
+      delete _reqMap;
+      return result;
+    }
 }
 
 SwiftResult<void*>* Container::swiftUpdateMetadata(
@@ -167,17 +185,26 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Add metadata keys to be deleted
+  bool shouldDelete = false;
   if (_metaDataKeys.size() > 0) {
-    if (_reqMap == nullptr)
+    if (_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     for (uint i = 0; i < _metaDataKeys.size(); i++)
       _reqMap->push_back(
           *new HTTPHeader("X-Remove-Container-Meta-" + _metaDataKeys[i], "x"));
   }
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+  if(!shouldDelete)
+      return result;
+    else {
+      delete _reqMap;
+      return result;
+    }
 }
 
 std::string& Container::getName() {

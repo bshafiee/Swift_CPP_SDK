@@ -1,5 +1,4 @@
 /*
- * Account.cpp
  *
  *  Created on: 2014-05-28
  *      Author: Behrooz Shafiee Sarjaz
@@ -249,9 +248,12 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //add X-Newest
+  bool shouldDelete = false;
   if (_newest) {
-    if(_reqMap == nullptr)
+    if(_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     _reqMap->push_back(*new HTTPHeader("X-Newest", "True"));
   }
 
@@ -259,9 +261,17 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
   uriParams.push_back(_formatHeader);
 
   //Do swift transaction
-  return doSwiftTransaction<istream*>(this, *new string(""),
-      HTTPRequest::HTTP_GET, &uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
-        nullptr, nullptr);
+  string path = "";
+  SwiftResult<istream*> *result = doSwiftTransaction<istream*>(this, path,
+          HTTPRequest::HTTP_GET, &uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
+            nullptr, nullptr);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _reqMap;
+    return result;
+  }
+
 }
 
 template<class T>
@@ -284,9 +294,12 @@ SwiftResult<void*>* Account::swiftCreateMetadata(
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Add Actual metadata
+  bool shouldDelete = false;
   if (_metaData.size() > 0) {
-    if (_reqMap == nullptr)
+    if (_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     for (uint i = 0; i < _metaData.size(); i++)
       _reqMap->push_back(
           *new HTTPHeader("X-Account-Meta-" + _metaData[i].first,
@@ -294,9 +307,16 @@ SwiftResult<void*>* Account::swiftCreateMetadata(
   }
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this, *new string(""),
+  string path = "";
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(this, path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
         nullptr, nullptr);
+  if(!shouldDelete)
+    return result;
+  else {
+    delete _reqMap;
+    return result;
+  }
 }
 
 SwiftResult<void*>* Account::swiftUpdateMetadata(
@@ -314,17 +334,27 @@ SwiftResult<void*>* Account::swiftDeleteMetadata(
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Add Actual metadata
+  bool shouldDelete = false;
   if (_metaDataKeys.size() > 0) {
-    if (_reqMap == nullptr)
+    if (_reqMap == nullptr) {
       _reqMap = new vector<HTTPHeader>();
+      shouldDelete = true;
+    }
     for (uint i = 0; i < _metaDataKeys.size(); i++)
       _reqMap->push_back(*new HTTPHeader("X-Remove-Account-Meta-" + _metaDataKeys[i], "x"));
   }
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this, *new string(""),
+  string path = "";
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(this, path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
         nullptr, nullptr);
+  if(!shouldDelete)
+      return result;
+    else {
+      delete _reqMap;
+      return result;
+    }
 }
 
 SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
@@ -340,7 +370,8 @@ SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
     _reqMap.push_back(*new HTTPHeader("X-Newest", "True"));
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this, *new string(""),
+  string path = "";
+  return doSwiftTransaction<void*>(this, path,
       HTTPRequest::HTTP_HEAD, nullptr, &_reqMap, &validHTTPCodes, nullptr, 0,
         nullptr, nullptr);
 }
