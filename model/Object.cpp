@@ -84,7 +84,6 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
       shouldDelete = true;
     }
     _reqMap->push_back(*new HTTPHeader("ETag", digestString));
-    cout << "inja:\t" << digestString << endl;
   }
 
   //Do swift transaction

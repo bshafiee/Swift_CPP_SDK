@@ -69,7 +69,8 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
   //Set Content size
   request.setContentLength(size);
   //Content Type
-  request.setContentType(contentType);
+  if(contentType.length() != 0)
+    request.setContentType(contentType);
 
   //Add params
   if (params != nullptr && params->size() > 0) {
@@ -197,8 +198,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
         httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,
             *contentType);
       else
-        httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,
-            "");
+        httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,"");
     } else if (bodyReqStream != nullptr)
       httpSession = doHTTPIO(uri, _method, reqParamMap, *bodyReqStream);
 

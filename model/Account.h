@@ -21,6 +21,9 @@ namespace Swift {
 /** Associated roles with this account **/
 struct Role;
 
+/** Forward declare Container **/
+class Container;
+
 class Account {
 private:
 
@@ -155,6 +158,12 @@ public:
   Service* getSwiftService();
 
   /** API Functions **/
+
+  /**
+   * Get All Containers
+   */
+  SwiftResult<std::vector<Container*>*>* swiftGetContainers(bool _newest = false);
+
   SwiftResult<std::istream*>* swiftAccountDetails(HTTPHeader &_formatHeader =
       HEADER_FORMAT_APPLICATION_JSON,
       std::vector<HTTPHeader> *_reqMap = nullptr, bool _newest = false);

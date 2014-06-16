@@ -5,6 +5,7 @@
  */
 
 #include "Account.h"
+#include "Container.h"
 #include "../io/HTTPIO.h"
 #include <Poco/Exception.h>
 #include <sstream>      // ostringstream
@@ -355,6 +356,44 @@ SwiftResult<void*>* Account::swiftDeleteMetadata(
       delete _reqMap;
       return result;
     }
+}
+
+SwiftResult<vector<Container*>*>* Account::swiftGetContainers(bool _newest) {
+  SwiftResult<istream*> *accountDetail = this->swiftAccountDetails(HEADER_FORMAT_APPLICATION_JSON,nullptr,_newest);
+  SwiftResult<vector<Container*>*> *result = new SwiftResult<vector<Container*>*>();
+  result->setError(accountDetail->getError());
+  result->setResponse(accountDetail->getResponse());
+
+  //Check error
+  if(accountDetail->getError().code != SWIFT_OK.code) {
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  //Parse JSON
+  Json::Value root;   // will contains the root value after parsing.
+  Json::Reader reader;
+  bool parsingSuccessful = reader.parse(*accountDetail->getPayload(), root, false);
+  if (!parsingSuccessful) {
+    SwiftError error(SwiftError::SWIFT_JSON_PARSE_ERROR,
+        reader.getFormattedErrorMessages());
+    result->setError(error);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  //Allocate containers
+  vector<Container*>*containers = new vector<Container*>();
+  //Successful parse
+  for(int i=0;i<root.size();i++) {
+    string name = root[i].get("name","").asString();
+    Container *container = new Container(this,name);
+    containers->push_back(container);
+  }
+
+  //Set payload
+  result->setPayload(containers);
+  return result;
 }
 
 SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
