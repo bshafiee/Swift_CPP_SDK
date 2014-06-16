@@ -20,10 +20,8 @@ public:
   virtual ~Container();
 
   /** API Functions **/
-  SwiftResult<std::istream*>* swiftGetObjects(HTTPHeader &_formatHeader =
-      HEADER_FORMAT_APPLICATION_JSON, bool _newest = false);
-  SwiftResult<std::istream*>* swiftGetObjects(HTTPHeader &_formatHeader,
-      std::vector<HTTPHeader> &_queryMap, bool _newest);
+  SwiftResult<std::istream*>* swiftGetObjects(HTTPHeader &_formatHeader = HEADER_FORMAT_APPLICATION_JSON,
+      std::vector<HTTPHeader> *_uriParam = nullptr, bool _newest = false);
 
   SwiftResult<void*>* swiftCreateContainer(std::vector<HTTPHeader> *_reqMap=nullptr);
 

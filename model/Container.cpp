@@ -29,13 +29,7 @@ Container::~Container() {
 }
 
 SwiftResult<std::istream*>* Container::swiftGetObjects(
-    HTTPHeader& _formatHeader, bool _newest) {
-  vector<HTTPHeader> _queryMap;
-  return swiftGetObjects(_formatHeader, _queryMap, _newest);
-}
-
-SwiftResult<std::istream*>* Container::swiftGetObjects(
-    HTTPHeader& _formatHeader, std::vector<HTTPHeader>& _queryMap,
+    HTTPHeader& _formatHeader, std::vector<HTTPHeader>* _uriParam,
     bool _newest) {
   //Check Container
   if (account == nullptr)
@@ -63,11 +57,13 @@ SwiftResult<std::istream*>* Container::swiftGetObjects(
   if (_newest)
     _reqMap.push_back(*new HTTPHeader("X-Newest", "True"));
   //Push Header Format
-  _queryMap.push_back(_formatHeader);
+  if (_uriParam == nullptr)
+    _uriParam = new vector<HTTPHeader>();
+  _uriParam->push_back(_formatHeader);
 
   //Do swift transaction
   return doSwiftTransaction<istream*>(this->account, path,
-      HTTPRequest::HTTP_GET, &_queryMap, &_reqMap, &validHTTPCodes, nullptr, 0,
+      HTTPRequest::HTTP_GET, _uriParam, &_reqMap, &validHTTPCodes, nullptr, 0,
       nullptr, nullptr);
 }
 

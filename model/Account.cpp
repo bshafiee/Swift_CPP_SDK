@@ -229,61 +229,9 @@ string Account::toString() {
   return output.str();
 }
 
-SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader& _formatHeader,
-    bool _newest) {
-  vector<HTTPHeader> _queryMap;
-  return swiftAccountDetails(_formatHeader, _queryMap, _newest);
-}
-
 SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
-    vector<HTTPHeader> &_queryMap, bool _newest) {
-  //Swift Endpoint
-  Endpoint* swiftEndpoint = this->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<istream*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-  //add X-Newest
-  if (_newest)
-    reqParamMap->push_back(*new HTTPHeader("X-Newest", "True"));
-  //Accept encoding
-  reqParamMap->push_back(*new HTTPHeader("Accept", _formatHeader.getValue()));
-  //Create appropriate URI
-  ostringstream queryStream;
-  if (_queryMap.size() > 0) {
-    queryStream << "?";
-    for (uint i = 0; i < _queryMap.size(); i++) {
-      if (i > 0)
-        queryStream << ",";
-      queryStream << _queryMap[i].getQueryValue();
-    }
-  }
-
-  URI uri(swiftEndpoint->getPublicUrl());
-  uri.setQuery(queryStream.str());
-
-  HTTPClientSession *httpSession = nullptr;
-  HTTPResponse *httpResponse = new HTTPResponse();
-  istream* inputStream = nullptr;
-  try {
-    /** This operation does not accept a request body. **/
-    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_GET, reqParamMap);
-    //Receive Data
-    inputStream = &httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<istream*> *result = new SwiftResult<istream*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-
+    vector<HTTPHeader> *_reqMap, bool _newest)
+{
   /**
    * Check HTTP return code
    * 200:
@@ -296,21 +244,24 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
    *  or end_marker query parameters, and you have reached
    *  the end of the list.
    */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_OK
-      && httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
-    SwiftResult<istream*> *result = new SwiftResult<istream*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_OK);
+  validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
+
+  //add X-Newest
+  if (_newest) {
+    if(_reqMap == nullptr)
+      _reqMap = new vector<HTTPHeader>();
+    _reqMap->push_back(*new HTTPHeader("X-Newest", "True"));
   }
-  //Everything seems fine
-  SwiftResult<istream*> *result = new SwiftResult<istream*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(inputStream);
-  return result;
+
+  vector<HTTPHeader> uriParams;
+  uriParams.push_back(_formatHeader);
+
+  //Do swift transaction
+  return doSwiftTransaction<istream*>(this, *new string(""),
+      HTTPRequest::HTTP_GET, &uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
+        nullptr, nullptr);
 }
 
 template<class T>
@@ -324,210 +275,74 @@ inline SwiftResult<T>* returnNullError(const string &whatsNull) {
 }
 
 SwiftResult<void*>* Account::swiftCreateMetadata(
-    vector<pair<string, string> >& _metaData) {
-  vector<HTTPHeader> _reqMap;  //zero sized requestParameter map
-  return swiftCreateMetadata(_metaData, _reqMap);
-}
-
-SwiftResult<void*>* Account::swiftCreateMetadata(
-    vector<pair<string, string> >& _metaData, vector<HTTPHeader>& _reqMap) {
-  //Swift Endpoint
-  Endpoint* swiftEndpoint = this->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<void*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-  //Add rest of request Parameters
-  if (_reqMap.size() > 0) {
-    for (uint i = 0; i < _reqMap.size(); i++) {
-      reqParamMap->push_back(_reqMap[i]);
-    }
-  }
+    vector<pair<string, string> >& _metaData, vector<HTTPHeader>* _reqMap) {
+  /**
+   * 204:
+   *  Success. The response body is empty.
+   */
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Add Actual metadata
-  if (_metaData.size() > 0)
+  if (_metaData.size() > 0) {
+    if (_reqMap == nullptr)
+      _reqMap = new vector<HTTPHeader>();
     for (uint i = 0; i < _metaData.size(); i++)
-      reqParamMap->push_back(
+      _reqMap->push_back(
           *new HTTPHeader("X-Account-Meta-" + _metaData[i].first,
               _metaData[i].second));
-
-  //Set URI
-  URI uri(swiftEndpoint->getPublicUrl());
-  //Creating HTTP Session
-  HTTPResponse *httpResponse = new HTTPResponse();
-  try {
-    /** This operation does not accept a request body. **/
-    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_POST,
-        reqParamMap);
-    httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
   }
 
-  /**
-   * Check HTTP return code
-   * 204:
-   *  Success. The response body is empty.
-   */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-  //Everything seems fine
-  SwiftResult<void*> *result = new SwiftResult<void*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(nullptr);
-  return result;
+  //Do swift transaction
+  return doSwiftTransaction<void*>(this, *new string(""),
+      HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
+        nullptr, nullptr);
 }
 
 SwiftResult<void*>* Account::swiftUpdateMetadata(
-    vector<pair<string, string> >& _metaData) {
-  return swiftCreateMetadata(_metaData);
-}
-
-SwiftResult<void*>* Account::swiftUpdateMetadata(
-    vector<pair<string, string> >& _metaData, vector<HTTPHeader>& _reqMap) {
+    vector<pair<string, string> >& _metaData, vector<HTTPHeader>* _reqMap) {
   return swiftCreateMetadata(_metaData, _reqMap);
 }
 
 SwiftResult<void*>* Account::swiftDeleteMetadata(
-    vector<string> &_metaDataKeys) {
-  vector<HTTPHeader> _reqMap;  //zero sized requestParameter map
-  return swiftDeleteMetadata(_metaDataKeys, _reqMap);
-}
-
-SwiftResult<void*>* Account::swiftDeleteMetadata(
-    std::vector<string> &_metaDataKeys, vector<HTTPHeader>& _reqMap) {
-  //Swift Endpoint
-  Endpoint* swiftEndpoint = this->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<void*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-  //Add rest of request Parameters
-  if (_reqMap.size() > 0) {
-    for (uint i = 0; i < _reqMap.size(); i++) {
-      reqParamMap->push_back(_reqMap[i]);
-    }
-  }
-
-  //Add Actual metadata
-  if (_metaDataKeys.size() > 0)
-    for (uint i = 0; i < _metaDataKeys.size(); i++)
-      reqParamMap->push_back(
-          *new HTTPHeader("X-Remove-Account-Meta-" + _metaDataKeys[i], "x"));
-
-  //Set URI
-  URI uri(swiftEndpoint->getPublicUrl());
-  //Creating HTTP Session
-  HTTPResponse *httpResponse = new HTTPResponse();
-  try {
-    /** This operation does not accept a request body. **/
-    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_POST,
-        reqParamMap);
-    httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-
+    std::vector<string> &_metaDataKeys, vector<HTTPHeader>* _reqMap) {
   /**
-   * Check HTTP return code
    * 204:
    *  Success. The response body is empty.
    */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
+
+  //Add Actual metadata
+  if (_metaDataKeys.size() > 0) {
+    if (_reqMap == nullptr)
+      _reqMap = new vector<HTTPHeader>();
+    for (uint i = 0; i < _metaDataKeys.size(); i++)
+      _reqMap->push_back(*new HTTPHeader("X-Remove-Account-Meta-" + _metaDataKeys[i], "x"));
   }
-  //Everything seems fine
-  SwiftResult<void*> *result = new SwiftResult<void*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(nullptr);
-  return result;
+
+  //Do swift transaction
+  return doSwiftTransaction<void*>(this, *new string(""),
+      HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
+        nullptr, nullptr);
 }
 
 SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
-  //Swift Endpoint
-  Endpoint* swiftEndpoint = this->getSwiftService()->getFirstEndpoint();
-  if (swiftEndpoint == nullptr)
-    return returnNullError<void*>("SWIFT Endpoint");
-
-  //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
-  //Add authentication token
-  string tokenID = getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
-  if(_newest)
-    reqParamMap->push_back(*new HTTPHeader("X-Newest", "True"));
-
-  //Set URI
-  URI uri(swiftEndpoint->getPublicUrl());
-  //Creating HTTP Session
-  HTTPResponse *httpResponse = new HTTPResponse();
-  try {
-    /** This operation does not accept a request body. **/
-    HTTPClientSession *httpSession = doHTTPIO(uri, HTTPRequest::HTTP_HEAD,
-        reqParamMap);
-    httpSession->receiveResponse(*httpResponse);
-  } catch (Exception &e) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
-    result->setError(error);
-    //Try to set HTTP Response as the payload
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-
   /**
-   * Check HTTP return code
    * 204:
    *  Success. The response body is empty.
    */
-  if (httpResponse->getStatus() != HTTPResponse::HTTP_NO_CONTENT) {
-    SwiftResult<void*> *result = new SwiftResult<void*>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
-    result->setError(error);
-    result->setResponse(httpResponse);
-    result->setPayload(nullptr);
-    return result;
-  }
-  //Everything seems fine
-  SwiftResult<void*> *result = new SwiftResult<void*>();
-  result->setError(SWIFT_OK);
-  result->setResponse(httpResponse);
-  result->setPayload(nullptr);
-  return result;
+  vector<int> validHTTPCodes;
+  validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
+
+  vector<HTTPHeader> _reqMap;
+  if (_newest)
+    _reqMap.push_back(*new HTTPHeader("X-Newest", "True"));
+
+  //Do swift transaction
+  return doSwiftTransaction<void*>(this, *new string(""),
+      HTTPRequest::HTTP_HEAD, nullptr, &_reqMap, &validHTTPCodes, nullptr, 0,
+        nullptr, nullptr);
 }
 
 } /* namespace Swift */

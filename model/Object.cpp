@@ -20,8 +20,8 @@ namespace Swift {
 template<class T>
 extern SwiftResult<T>* returnNullError(const string &whatsNull);
 
-Object::Object(Container* _container) :
-    container(_container) {
+Object::Object(Container* _container, std::string _name) :
+    container(_container), name(_name) {
   // TODO Auto-generated constructor stub
 
 }
@@ -31,13 +31,12 @@ Object::~Object() {
 }
 
 SwiftResult<istream*>* Object::swiftGetObjectContent(
-    const std::string &_objectName, std::vector<HTTPHeader>* _uriParams,
-    std::vector<HTTPHeader>* _reqMap) {
+    std::vector<HTTPHeader>* _uriParams, std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
     return returnNullError<istream*>("container");
   //Path
-  string path = container->getName() + "/" + _objectName;
+  string path = container->getName() + "/" + name;
   /**
    * Valid HTTP return codes for this operation: 200
    * Success. The response body shows object content
@@ -51,15 +50,14 @@ SwiftResult<istream*>* Object::swiftGetObjectContent(
       nullptr, nullptr);
 }
 
-SwiftResult<void*>* Object::swiftCreateReplaceObject(
-    const std::string& _objectName, const char* _data, ulong _size,
-    bool _calculateETag, std::vector<HTTPHeader>* _uriParams,
+SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
+    ulong _size, bool _calculateETag, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
     return returnNullError<void*>("container");
   //Path
-  string path = container->getName() + "/" + _objectName;
+  string path = container->getName() + "/" + name;
   /**
    * Check HTTP return code
    * 201:
@@ -92,14 +90,13 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(
       nullptr, nullptr);
 }
 
-SwiftResult<void*>* Object::swiftCopyObject(const std::string& _srcObjectName,
-    const std::string& _dstObjectName, Container& _dstContainer,
-    std::vector<HTTPHeader>* _reqMap) {
+SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
+    Container& _dstContainer, std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
     return returnNullError<void*>("container");
   //Path
-  string path = container->getName() + "/" + _srcObjectName;
+  string path = container->getName() + "/" + name;
   /**
    * Check HTTP return code
    * 201:
@@ -120,13 +117,12 @@ SwiftResult<void*>* Object::swiftCopyObject(const std::string& _srcObjectName,
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
 }
 
-SwiftResult<std::istream*>* Object::swiftDeleteObject(
-    const std::string& _objectName, bool _multipartManifest) {
+SwiftResult<std::istream*>* Object::swiftDeleteObject(bool _multipartManifest) {
   //Check Container
   if (container == nullptr)
     return returnNullError<istream*>("container");
   //Path
-  string path = container->getName() + "/" + _objectName;
+  string path = container->getName() + "/" + name;
   /**
    * Check HTTP return code
    * 204:
@@ -149,14 +145,14 @@ SwiftResult<std::istream*>* Object::swiftDeleteObject(
 }
 
 SwiftResult<istream*>* Object::swiftCreateMetadata(
-    const std::string& _objectName, map<std::string, std::string> &_metaData,
-    std::vector<HTTPHeader>* _reqMap, bool _keepExistingMetadata) {
+    map<std::string, std::string> &_metaData, std::vector<HTTPHeader>* _reqMap,
+    bool _keepExistingMetadata) {
 
   //Check Container
   if (container == nullptr)
     return returnNullError<istream*>("container");
   //Path
-  string path = container->getName() + "/" + _objectName;
+  string path = container->getName() + "/" + name;
   /**
    * Check HTTP return code
    * 202:
@@ -168,7 +164,7 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
   //Keep Existing MetaData
   if (_keepExistingMetadata) {
     std::vector<std::pair<std::string, std::string> > *existingMeta =
-        getExistingMetaData(_objectName);
+        getExistingMetaData();
     if (existingMeta != nullptr && existingMeta->size() > 0)
       for (uint i = 0; i < existingMeta->size(); i++)
         if (_metaData.find(existingMeta->at(i).first) == _metaData.end())
@@ -194,19 +190,18 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
 }
 
 SwiftResult<std::istream*>* Object::swiftUpdateMetadata(
-    const std::string& _objectName,
     std::map<std::string, std::string> &_metaData,
     std::vector<HTTPHeader>* _reqMap) {
-  return swiftCreateMetadata(_objectName, _metaData, _reqMap);
+  return swiftCreateMetadata(_metaData, _reqMap);
 }
 
 SwiftResult<istream*>* Object::swiftDeleteMetadata(
-    const std::string& _objectName, std::vector<std::string>& _metaDataKeys) {
+    std::vector<std::string>& _metaDataKeys) {
   //Existing MetaData
   map<string, string> metaData;
   //Keep Existing MetaData
   std::vector<std::pair<std::string, std::string> > *existingMeta =
-      getExistingMetaData(_objectName);
+      getExistingMetaData();
   if (existingMeta != nullptr && existingMeta->size() > 0)
     for (uint i = 0; i < existingMeta->size(); i++)
       metaData.insert(
@@ -218,17 +213,16 @@ SwiftResult<istream*>* Object::swiftDeleteMetadata(
       metaData.erase(it);
   }
 
-  return swiftCreateMetadata(_objectName, metaData, nullptr, false);
+  return swiftCreateMetadata(metaData, nullptr, false);
 }
 
-SwiftResult<void*>* Object::swiftCreateReplaceObject(
-    const std::string& _objectName, std::istream &inputStream,
+SwiftResult<void*>* Object::swiftCreateReplaceObject(std::istream &inputStream,
     std::vector<HTTPHeader>* _uriParams, std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
     return returnNullError<void*>("container");
   //Path
-  string path = container->getName() + "/" + _objectName;
+  string path = container->getName() + "/" + name;
   /**
    * Check HTTP return code
    * 201:
@@ -253,13 +247,13 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(
       nullptr, &inputStream);
 }
 
-SwiftResult<void*>* Object::swiftShowMetadata(const std::string& _objectName,
+SwiftResult<void*>* Object::swiftShowMetadata(
     std::vector<HTTPHeader>* _uriParams, bool _newest) {
   //Check Container
   if (container == nullptr)
     return returnNullError<void*>("container");
   //Path
-  string path = container->getName() + "/" + _objectName;
+  string path = container->getName() + "/" + name;
   /**
    * Check HTTP return code
    * 200 through 299 indicates success.
@@ -293,10 +287,8 @@ SwiftResult<void*>* Object::swiftShowMetadata(const std::string& _objectName,
       0, nullptr, nullptr);
 }
 
-std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData(
-    const std::string& _objectName) {
-  SwiftResult<void*>* metadata = this->swiftShowMetadata(_objectName, nullptr,
-      false);
+std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData() {
+  SwiftResult<void*>* metadata = this->swiftShowMetadata(nullptr, false);
   if (metadata == nullptr)
     return nullptr;
   if (metadata->getResponse() == nullptr)
@@ -315,6 +307,22 @@ std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData(
   }
 
   return result;
+}
+
+Container* Object::getContainer() {
+  return container;
+}
+
+void Object::setContainer(Container* container) {
+  this->container = container;
+}
+
+std::string Object::getName() {
+  return name;
+}
+
+void Object::setName(const std::string& name) {
+  this->name = name;
 }
 
 } /* namespace Swift */
