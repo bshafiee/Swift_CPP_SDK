@@ -91,7 +91,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
 
 Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     const std::string& type, std::vector<HTTPHeader>* params,
-    std::istream& inputStream) {
+    std::ostream* &outputStream) {
   HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
       uri.getPort());
   HTTPRequest request(type, uri.getPath());
@@ -105,16 +105,19 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     }
   }
 
-  //write request body
-  ostream &ostream = session->sendRequest(request);
-  if (ostream == nullptr)
-    return nullptr;
+  //Ouput stream
+  outputStream = &session->sendRequest(request);
   //Copy input stream to the output stream
-  StreamCopier::copyStream(inputStream, ostream);
+  //StreamCopier::copyStream(inputStream, ostream);
   //ostream << inputStream;
 
   return session;
 }
+
+/** Template instantiation for common used types **/
+template SwiftResult<void*>* returnNullError<void*>(const string &whatsNull);
+template SwiftResult<istream*>* returnNullError<istream*>(const string &whatsNull);
+template SwiftResult<HTTPClientSession*>* returnNullError<HTTPClientSession*>(const string &whatsNull);
 
 template<class T>
 inline SwiftResult<T>* returnNullError(const string &whatsNull) {
@@ -132,21 +135,20 @@ SwiftResult<istream*>* doSwiftTransaction<istream*>(Account *_account,
     std::string &_uriPath, const std::string &_method,
     std::vector<HTTPHeader>* _uriParams, std::vector<HTTPHeader>* _reqMap,
     std::vector<int> *_httpValidCodes, const char *bodyReqBuffer, ulong size,
-    std::string *contentType, istream* bodyReqStream); //{}
+    std::string *contentType);
 
 template
 SwiftResult<void*>* doSwiftTransaction<void*>(Account *_account,
     std::string &_uriPath, const std::string &_method,
     std::vector<HTTPHeader>* _uriParams, std::vector<HTTPHeader>* _reqMap,
     std::vector<int> *_httpValidCodes, const char *bodyReqBuffer, ulong size,
-    std::string *contentType, istream* bodyReqStream); //{}
+    std::string *contentType);
 
 template<class T>
 SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     const std::string &_method, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap, std::vector<int> *_httpValidCodes,
-    const char *bodyReqBuffer, ulong size, std::string *contentType,
-    std::istream* bodyReqStream) {
+    const char *bodyReqBuffer, ulong size, std::string *contentType) {
   if (_account == nullptr)
     return returnNullError<T>("account");
   Endpoint* swiftEndpoint = _account->getSwiftService()->getFirstEndpoint();
@@ -188,19 +190,18 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
   istream* resultStream = nullptr;
+  HTTPClientSession *httpSession = nullptr;
   try {
-    HTTPClientSession *httpSession = nullptr;
     /** This operation does not accept a request body. **/
-    if (bodyReqBuffer == nullptr && bodyReqStream == nullptr)
+    if (bodyReqBuffer == nullptr)
       httpSession = doHTTPIO(uri, _method, reqParamMap);
-    else if (bodyReqBuffer != nullptr) {
+    else {
       if (contentType != nullptr)
         httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,
             *contentType);
       else
         httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,"");
-    } else if (bodyReqStream != nullptr)
-      httpSession = doHTTPIO(uri, _method, reqParamMap, *bodyReqStream);
+    }
 
     //Now we should increase number of calls to SWIFT API
     _account->increaseCallCounter();

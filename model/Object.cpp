@@ -20,10 +20,10 @@ namespace Swift {
 template<class T>
 extern SwiftResult<T>* returnNullError(const string &whatsNull);
 
-Object::Object(Container* _container, std::string _name) :
-    container(_container), name(_name) {
-  // TODO Auto-generated constructor stub
-
+Object::Object(Container* _container, std::string _name, long _length,
+    std::string _content_type, std::string _hash, std::string _last_modified) :
+    container(_container), name(_name), length(_length), content_type(
+        _content_type), hash(_hash), last_modified(_last_modified) {
 }
 
 Object::~Object() {
@@ -47,7 +47,7 @@ SwiftResult<istream*>* Object::swiftGetObjectContent(
   //Do swift transaction
   return doSwiftTransaction<istream*>(container->getAccount(), path,
       HTTPRequest::HTTP_GET, _uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
-      nullptr, nullptr);
+      nullptr);
 }
 
 SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
@@ -87,10 +87,10 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
   }
 
   //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(container->getAccount(), path,
-      HTTPRequest::HTTP_PUT, _uriParams, _reqMap, &validHTTPCodes, _data, _size,
-      nullptr, nullptr);
-  if(!shouldDelete)
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(
+      container->getAccount(), path, HTTPRequest::HTTP_PUT, _uriParams, _reqMap,
+      &validHTTPCodes, _data, _size, nullptr);
+  if (!shouldDelete)
     return result;
   else {
     delete _reqMap;
@@ -124,9 +124,10 @@ SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
           _dstContainer.getName() + "/" + _dstObjectName));
 
   //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(container->getAccount(), path, "COPY",
-      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
-  if(!shouldDelete)
+  SwiftResult<void*>* result = doSwiftTransaction<void*>(
+      container->getAccount(), path, "COPY", nullptr, _reqMap, &validHTTPCodes,
+      nullptr, 0, nullptr);
+  if (!shouldDelete)
     return result;
   else {
     delete _reqMap;
@@ -158,7 +159,7 @@ SwiftResult<std::istream*>* Object::swiftDeleteObject(bool _multipartManifest) {
   //Do swift transaction
   return doSwiftTransaction<istream*>(container->getAccount(), path,
       HTTPRequest::HTTP_DELETE, &_uriParams, nullptr, &validHTTPCodes, nullptr,
-      0, nullptr, nullptr);
+      0, nullptr);
 }
 
 SwiftResult<istream*>* Object::swiftCreateMetadata(
@@ -204,10 +205,10 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
   }
 
   //Do swift transaction
-  SwiftResult<istream*>* result = doSwiftTransaction<istream*>(container->getAccount(), path,
-      HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
-      nullptr, nullptr);
-  if(!shouldDelete)
+  SwiftResult<istream*>* result = doSwiftTransaction<istream*>(
+      container->getAccount(), path, HTTPRequest::HTTP_POST, nullptr, _reqMap,
+      &validHTTPCodes, nullptr, 0, nullptr);
+  if (!shouldDelete)
     return result;
   else {
     delete _reqMap;
@@ -242,44 +243,75 @@ SwiftResult<istream*>* Object::swiftDeleteMetadata(
   return swiftCreateMetadata(metaData, nullptr, false);
 }
 
-SwiftResult<void*>* Object::swiftCreateReplaceObject(std::istream &inputStream,
+SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* &outputStream,
     std::vector<HTTPHeader>* _uriParams, std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
-    return returnNullError<void*>("container");
+    return returnNullError<HTTPClientSession*>("container");
+
+  if (container->getAccount() == nullptr)
+    return returnNullError<HTTPClientSession*>("account");
+  Endpoint* swiftEndpoint =
+      container->getAccount()->getSwiftService()->getFirstEndpoint();
+  if (swiftEndpoint == nullptr)
+    return returnNullError<HTTPClientSession*>("SWIFT Endpoint");
+
+  //Create parameter map
+  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  //Add authentication token
+  string tokenID = container->getAccount()->getToken()->getId();
+  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  //Push Chuncked Encoding
+  reqParamMap->push_back(*new HTTPHeader("Transfer-Encoding", "chunked"));
+  //Add rest of request Parameters
+  if (_reqMap != nullptr && _reqMap->size() > 0) {
+    for (uint i = 0; i < _reqMap->size(); i++) {
+      reqParamMap->push_back(_reqMap->at(i));
+      //cout<<_reqMap->at(i).getQueryValue()<<endl;
+    }
+  }
+
   //Path
   string path = container->getName() + "/" + name;
-  /**
-   * Check HTTP return code
-   * 201:
-   *  Created
-   *
-   *  Error response codes:
-   *  timeout (408),
-   *  lengthRequired (411),
-   *  unprocessableEntity (422)
-   */
-  vector<int> validHTTPCodes;
-  validHTTPCodes.push_back(HTTPResponse::HTTP_CREATED);
+  URI uri(swiftEndpoint->getPublicUrl());
+  uri.setPath(uri.getPath() + "/" + path);
 
-  //Set Transfer-Encoding: chunked
-  bool shouldDelete = false;
-  if (_reqMap == nullptr) {
-    _reqMap = new vector<HTTPHeader>();
-    shouldDelete = true;
+  if (_uriParams != nullptr && _uriParams->size() > 0) {
+    //Create appropriate URI
+    ostringstream queryStream;
+    //queryStream << "?";
+    for (uint i = 0; i < _uriParams->size(); i++) {
+      if (i > 0)
+        queryStream << ",";
+      queryStream << _uriParams->at(i).getQueryValue();
+    }
+    uri.setQuery(queryStream.str());
+    cout << uri.toString() << endl;
   }
-  _reqMap->push_back(*new HTTPHeader("Transfer-Encoding", "chunked"));
 
-  //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(container->getAccount(), path,
-      HTTPRequest::HTTP_PUT, _uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
-      nullptr, &inputStream);
-  if(!shouldDelete)
-    return result;
-  else {
-    delete _reqMap;
+  //Creating HTTP Session
+  HTTPClientSession *httpSession = nullptr;
+  try {
+    /** This operation does not accept a request body. **/
+    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_PUT, reqParamMap, outputStream);
+    //Now we should increase number of calls to SWIFT API
+    container->getAccount()->increaseCallCounter();
+  } catch (Exception &e) {
+    SwiftResult<HTTPClientSession*> *result = new SwiftResult<HTTPClientSession*>();
+    SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
+    result->setError(error);
+    //Try to set HTTP Response as the payload
+    result->setResponse(nullptr);
+    result->setPayload(nullptr);
     return result;
   }
+
+  //Everything seems fine
+  SwiftResult<HTTPClientSession*> *result = new SwiftResult<HTTPClientSession*>();
+  result->setError(SWIFT_OK);
+  result->setResponse(nullptr);
+  result->setPayload(httpSession);
+  return result;
 }
 
 SwiftResult<void*>* Object::swiftShowMetadata(
@@ -319,7 +351,7 @@ SwiftResult<void*>* Object::swiftShowMetadata(
   //Do swift transaction
   return doSwiftTransaction<void*>(container->getAccount(), path,
       HTTPRequest::HTTP_HEAD, _uriParams, &reqHeaders, &validHTTPCodes, nullptr,
-      0, nullptr, nullptr);
+      0, nullptr);
 }
 
 std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData() {
@@ -358,6 +390,38 @@ std::string Object::getName() {
 
 void Object::setName(const std::string& name) {
   this->name = name;
+}
+
+std::string Object::getContentType() {
+  return content_type;
+}
+
+void Object::setContentType(const std::string& contentType) {
+  content_type = contentType;
+}
+
+std::string Object::getHash() {
+  return hash;
+}
+
+void Object::setHash(const std::string& hash) {
+  this->hash = hash;
+}
+
+std::string Object::getLastModified() {
+  return last_modified;
+}
+
+void Object::setLastModified(const std::string& lastModified) {
+  last_modified = lastModified;
+}
+
+long Object::getLength() {
+  return length;
+}
+
+void Object::setLength(long length) {
+  this->length = length;
 }
 
 } /* namespace Swift */

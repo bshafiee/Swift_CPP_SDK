@@ -13,6 +13,7 @@
 #include "model/Object.h"
 #include <sstream>      // ostringstream
 #include <cstring>
+#include <climits>
 
 using namespace Poco::Net;
 using namespace Poco;
@@ -41,9 +42,41 @@ int main(int argc, char** argv) {
   SwiftResult<istream*>* accountDetails = authenticateResult->getPayload()->swiftAccountDetails(HEADER_FORMAT_APPLICATION_JSON);
   //StreamCopier::copyStream(*accountDetails->getPayload(),cout);cout<<endl<<endl;
 
-  SwiftResult<vector<Container*>*>* conatiners = authenticateResult->getPayload()->swiftGetContainers(true);
-  for(int i=0;i<conatiners->getPayload()->size();i++)
-    cout<<conatiners->getPayload()->at(i)->getName()<<endl;
+  Container container(authenticateResult->getPayload(),"Container2");
+  SwiftResult<vector<Object*>*>* objects = container.swiftGetObjects(true);
+  for(int i=0;i<objects->getPayload()->size();i++) {
+    cout<<objects->getPayload()->at(i)->getName()<<"\tLength:"<<
+        objects->getPayload()->at(i)->getLength()<<"\tType:"<<
+        objects->getPayload()->at(i)->getContentType()<<"\tHash:"<<
+        objects->getPayload()->at(i)->getHash()<<"\tLastModiefied:"<<
+        objects->getPayload()->at(i)->getLastModified()<<endl;;
+  }
+/*
+  Object chucnkedObject(&container,"ChunkedObject");
+  ostream *outStream = nullptr;
+  SwiftResult<HTTPClientSession*> *chunkedResult = chucnkedObject.swiftCreateReplaceObject(outStream);
+
+  ulong max = INT_MAX/10;
+  for(ulong i=0;i<max;i++)
+  {
+    *outStream <<i<<"\n";
+    if(i%1000 == 0)
+    {
+      double id = i;
+      cout<<(id/(double)max)*100<<" %"<<endl;
+    }
+  }
+  HTTPResponse response;
+  chunkedResult->getPayload()->receiveResponse(response);
+  response.write(cout);cout<<endl<<endl;
+
+  //Object get content
+  SwiftResult<istream*> *readResult = chucnkedObject.swiftGetObjectContent();
+  //StreamCopier::copyStream(*readResult->getPayload(),cout);cout<<endl<<endl;
+  int bufSize = 1000000;
+  char buf[bufSize];
+  while(!readResult->getPayload()->eof())
+    readResult->getPayload()->read(buf,bufSize);*/
 
 
 /*
@@ -84,7 +117,7 @@ int main(int argc, char** argv) {
 
   //Get objects of an existing container
   container.setName("Container2");
-  SwiftResult<istream*>* containerResult = container.swiftGetObjects();
+  SwiftResult<istream*>* containerResult = container.swiftListObjects();
   StreamCopier::copyStream(*containerResult->getPayload(),cout);cout<<endl<<endl;
 
   //Create Container metadata

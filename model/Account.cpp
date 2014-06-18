@@ -18,10 +18,6 @@ namespace Swift {
 /** Initialize Static members **/
 ulong Account::numOfCalls = 0;
 
-/** Forward Declarations **/
-template<class T>
-inline SwiftResult<T>* returnNullError(const string &whatsNull);
-
 struct Role {
   string name = "null";
   Role() {
@@ -265,7 +261,7 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
   string path = "";
   SwiftResult<istream*> *result = doSwiftTransaction<istream*>(this, path,
           HTTPRequest::HTTP_GET, &uriParams, _reqMap, &validHTTPCodes, nullptr, 0,
-            nullptr, nullptr);
+            nullptr);
   if(!shouldDelete)
     return result;
   else {
@@ -273,16 +269,6 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
     return result;
   }
 
-}
-
-template<class T>
-inline SwiftResult<T>* returnNullError(const string &whatsNull) {
-  SwiftResult<T> *result = new SwiftResult<T>();
-  SwiftError error(SwiftError::SWIFT_FAIL, whatsNull + " is NULL");
-  result->setError(error);
-  result->setResponse(nullptr);
-  result->setPayload(nullptr);
-  return result;
 }
 
 SwiftResult<void*>* Account::swiftCreateMetadata(
@@ -311,7 +297,7 @@ SwiftResult<void*>* Account::swiftCreateMetadata(
   string path = "";
   SwiftResult<void*>* result = doSwiftTransaction<void*>(this, path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
-        nullptr, nullptr);
+        nullptr);
   if(!shouldDelete)
     return result;
   else {
@@ -349,7 +335,7 @@ SwiftResult<void*>* Account::swiftDeleteMetadata(
   string path = "";
   SwiftResult<void*>* result = doSwiftTransaction<void*>(this, path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
-        nullptr, nullptr);
+        nullptr);
   if(!shouldDelete)
       return result;
     else {
@@ -412,7 +398,7 @@ SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
   string path = "";
   return doSwiftTransaction<void*>(this, path,
       HTTPRequest::HTTP_HEAD, nullptr, &_reqMap, &validHTTPCodes, nullptr, 0,
-        nullptr, nullptr);
+        nullptr);
 }
 
 } /* namespace Swift */

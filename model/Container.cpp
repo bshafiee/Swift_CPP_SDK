@@ -8,16 +8,13 @@
 #include "Container.h"
 #include <sstream>      // ostringstream
 #include "../io/HTTPIO.h"
+#include "Object.h"
 
 using namespace std;
 using namespace Poco;
 using namespace Poco::Net;
 
 namespace Swift {
-
-/** Forward Declarations **/
-template<class T>
-extern SwiftResult<T>* returnNullError(const string &whatsNull);
 
 Container::Container(Account* _account, std::string _name) :
     account(_account), name(_name) {
@@ -28,7 +25,7 @@ Container::~Container() {
   // TODO Auto-generated destructor stub
 }
 
-SwiftResult<std::istream*>* Container::swiftGetObjects(
+SwiftResult<std::istream*>* Container::swiftListObjects(
     HTTPHeader& _formatHeader, std::vector<HTTPHeader>* _uriParam,
     bool _newest) {
   //Check Container
@@ -67,7 +64,7 @@ SwiftResult<std::istream*>* Container::swiftGetObjects(
   //Do swift transaction
   SwiftResult<istream*> *result = doSwiftTransaction<istream*>(this->account, path,
       HTTPRequest::HTTP_GET, _uriParam, &_reqMap, &validHTTPCodes, nullptr, 0,
-      nullptr, nullptr);
+      nullptr);
   if(!shouldDelete)
     return result;
   else {
@@ -97,7 +94,7 @@ SwiftResult<void*>* Container::swiftCreateContainer(
 
   //Do swift transaction
   return doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_PUT,
-      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr);
 }
 
 SwiftResult<void*>* Container::swiftDeleteContainer() {
@@ -118,7 +115,7 @@ SwiftResult<void*>* Container::swiftDeleteContainer() {
   //Do swift transaction
   return doSwiftTransaction<void*>(this->account, path,
       HTTPRequest::HTTP_DELETE, nullptr, nullptr, &validHTTPCodes, nullptr, 0,
-      nullptr, nullptr);
+      nullptr);
 }
 
 SwiftResult<void*>* Container::swiftCreateMetadata(
@@ -153,7 +150,7 @@ SwiftResult<void*>* Container::swiftCreateMetadata(
 
   //Do swift transaction
   SwiftResult<void*>* result = doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
-      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr);
   if(!shouldDelete)
       return result;
     else {
@@ -198,7 +195,7 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(
 
   //Do swift transaction
   SwiftResult<void*>* result = doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
-      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+      nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr);
   if(!shouldDelete)
       return result;
     else {
@@ -209,6 +206,49 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(
 
 std::string& Container::getName() {
   return name;
+}
+
+SwiftResult<vector<Object*>*>* Container::swiftGetObjects(bool _newest) {
+  SwiftResult<istream*> *objectList = this->swiftListObjects(HEADER_FORMAT_APPLICATION_JSON,nullptr,_newest);
+  SwiftResult<vector<Object*>*> *result = new SwiftResult<vector<Object*>*>();
+  result->setError(objectList->getError());
+  result->setResponse(objectList->getResponse());
+
+  //Check error
+  if(objectList->getError().code != SWIFT_OK.code) {
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  //Parse JSON
+  Json::Value root;   // will contains the root value after parsing.
+  Json::Reader reader;
+  bool parsingSuccessful = reader.parse(*objectList->getPayload(), root, false);
+  if (!parsingSuccessful) {
+    SwiftError error(SwiftError::SWIFT_JSON_PARSE_ERROR,
+        reader.getFormattedErrorMessages());
+    result->setError(error);
+    result->setPayload(nullptr);
+    return result;
+  }
+
+  //Allocate containers
+  vector<Object*>*objects = new vector<Object*>();
+  //Successful parse
+  for(int i=0;i<root.size();i++) {
+    string name = root[i].get("name","").asString();
+    long length = root[i].get("bytes",-1).asInt64();
+    string content_type = root[i].get("content_type","").asString();
+    string hash = root[i].get("hash","").asString();
+    string last_modified = root[i].get("last_modified","").asString();
+    //Create new object
+    Object *object = new Object(this,name,length,content_type,hash,last_modified);
+    objects->push_back(object);
+  }
+
+  //Set payload
+  result->setPayload(objects);
+  return result;
 }
 
 void Container::setName(const std::string& name) {
@@ -241,7 +281,7 @@ SwiftResult<void*>* Container::swiftShowMetadata(bool _newest) {
 
   //Do swift transaction
   return doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_HEAD,
-      nullptr, &_reqMap, &validHTTPCodes, nullptr, 0, nullptr, nullptr);
+      nullptr, &_reqMap, &validHTTPCodes, nullptr, 0, nullptr);
 }
 
 } /* namespace Swift */
