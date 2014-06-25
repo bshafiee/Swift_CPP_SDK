@@ -156,14 +156,15 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     return returnNullError<T>("SWIFT Endpoint");
 
   //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  vector<HTTPHeader> reqParamMap;
   //Add authentication token
   string tokenID = _account->getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  HTTPHeader authHeader("X-Auth-Token", tokenID);
+  reqParamMap.push_back(authHeader);
   //Add rest of request Parameters
   if (_reqMap != nullptr && _reqMap->size() > 0) {
     for (uint i = 0; i < _reqMap->size(); i++) {
-      reqParamMap->push_back(_reqMap->at(i));
+      reqParamMap.push_back(_reqMap->at(i));
       //cout<<_reqMap->at(i).getQueryValue()<<endl;
     }
   }
@@ -194,13 +195,13 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   try {
     /** This operation does not accept a request body. **/
     if (bodyReqBuffer == nullptr)
-      httpSession = doHTTPIO(uri, _method, reqParamMap);
+      httpSession = doHTTPIO(uri, _method, &reqParamMap);
     else {
       if (contentType != nullptr)
-        httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,
+        httpSession = doHTTPIO(uri, _method, &reqParamMap, bodyReqBuffer, size,
             *contentType);
       else
-        httpSession = doHTTPIO(uri, _method, reqParamMap, bodyReqBuffer, size,"");
+        httpSession = doHTTPIO(uri, _method, &reqParamMap, bodyReqBuffer, size,"");
     }
 
     //Now we should increase number of calls to SWIFT API
@@ -214,6 +215,8 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     //Try to set HTTP Response as the payload
     result->setResponse(httpResponse);
     result->setPayload(nullptr);
+    //Cleanup
+    delete httpSession;
     return result;
   }
 
@@ -233,6 +236,8 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     result->setError(error);
     result->setResponse(httpResponse);
     result->setPayload(nullptr);
+    //Cleanup
+    delete httpSession;
     return result;
   }
 
@@ -241,6 +246,8 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   result->setError(SWIFT_OK);
   result->setResponse(httpResponse);
   result->setPayload(resultStream);
+  //Cleanup
+  delete httpSession;
   return result;
 }
 

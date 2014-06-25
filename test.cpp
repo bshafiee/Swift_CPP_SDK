@@ -30,186 +30,201 @@ int main(int argc, char** argv) {
   AuthenticationInfo info;
   info.username = "behrooz";
   info.password = "behrooz";
-  info.authUrl = "http://192.168.249.109:5000/v2.0/tokens";
-  info.tenantName = "BehroozProject";
+  info.authUrl = "http://10.42.0.83:5000/v2.0/tokens";
+  info.tenantName = "kos";
   info.method = AuthenticationMethod::KEYSTONE;
 
   //Account Test cases
   SwiftResult<Account*>* authenticateResult = Account::authenticate(info);
-  //cout<<"Account Test case:\n"<<authenticateResult->getPayload()->toString()<<endl<<endl;
+  cout << "Account Test case:\n" << authenticateResult->getPayload()->toString()
+      << endl << endl;
 
   //Get account details
-  SwiftResult<istream*>* accountDetails = authenticateResult->getPayload()->swiftAccountDetails(HEADER_FORMAT_APPLICATION_JSON);
-  //StreamCopier::copyStream(*accountDetails->getPayload(),cout);cout<<endl<<endl;
+  SwiftResult<istream*>* accountDetails =
+      authenticateResult->getPayload()->swiftAccountDetails(
+          HEADER_FORMAT_APPLICATION_JSON);
+  StreamCopier::copyStream(*accountDetails->getPayload(), cout);
+  cout << endl << endl;
 
-  Container container(authenticateResult->getPayload(),"Container2");
-  SwiftResult<vector<Object*>*>* objects = container.swiftGetObjects(true);
-  for(int i=0;i<objects->getPayload()->size();i++) {
-    cout<<objects->getPayload()->at(i)->getName()<<"\tLength:"<<
-        objects->getPayload()->at(i)->getLength()<<"\tType:"<<
-        objects->getPayload()->at(i)->getContentType()<<"\tHash:"<<
-        objects->getPayload()->at(i)->getHash()<<"\tLastModiefied:"<<
-        objects->getPayload()->at(i)->getLastModified()<<endl;;
+  //Create account metadata
+  vector<pair<string, string> > accountMetaData;
+  accountMetaData.push_back(make_pair("Key 1", "Value 1"));
+  accountMetaData.push_back(make_pair("Key 2", "Value 2"));
+  SwiftResult<void*>* accountMetaDataRes =
+      authenticateResult->getPayload()->swiftCreateMetadata(accountMetaData);
+  accountMetaDataRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //delete account metadata
+  vector<string> accountMetaDataDeleteKeys;
+  accountMetaDataDeleteKeys.push_back("Key 2");
+  accountMetaDataRes = authenticateResult->getPayload()->swiftDeleteMetadata(
+      accountMetaDataDeleteKeys);
+  accountMetaDataRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Update account metadata
+  accountMetaData.clear();
+  accountMetaData.push_back(make_pair("Key 1", "Value 1 updated"));
+  accountMetaDataRes = authenticateResult->getPayload()->swiftUpdateMetadata(
+      accountMetaData);
+  accountMetaDataRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Show account metadata
+  accountMetaDataRes = authenticateResult->getPayload()->swiftShowMetadata();
+  accountMetaDataRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Container Test Cases
+  Container container(authenticateResult->getPayload(), "Container 3");
+
+  //Create container
+  SwiftResult<void*>* containerRes = container.swiftCreateContainer();
+  containerRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Container list objects test
+  Container container2(authenticateResult->getPayload(), "Container2");
+  SwiftResult<vector<Object*>*>* objects = container2.swiftGetObjects(true);
+  for (int i = 0; i < objects->getPayload()->size(); i++) {
+    cout << objects->getPayload()->at(i)->getName() << "\tLength:"
+        << objects->getPayload()->at(i)->getLength() << "\tType:"
+        << objects->getPayload()->at(i)->getContentType() << "\tHash:"
+        << objects->getPayload()->at(i)->getHash() << "\tLastModiefied:"
+        << objects->getPayload()->at(i)->getLastModified() << endl;
+    ;
   }
-/*
-  Object chucnkedObject(&container,"ChunkedObject");
-  ostream *outStream = nullptr;
-  SwiftResult<HTTPClientSession*> *chunkedResult = chucnkedObject.swiftCreateReplaceObject(outStream);
 
-  ulong max = INT_MAX/10;
-  for(ulong i=0;i<max;i++)
-  {
-    *outStream <<i<<"\n";
-    if(i%1000 == 0)
-    {
+  //Delete container
+  containerRes = container.swiftDeleteContainer();
+  containerRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Get objects of an existing container
+  container.setName("Container2");
+  SwiftResult<istream*>* containerResult = container.swiftListObjects();
+  StreamCopier::copyStream(*containerResult->getPayload(), cout);
+  cout << endl << endl;
+
+  //Create Container metadata
+  vector<pair<string, string> > containerMetaData;
+  containerMetaData.push_back(make_pair("Key 1", "Container Value 1"));
+  containerMetaData.push_back(make_pair("Key 2", "container Value 2"));
+  containerRes = container.swiftCreateMetadata(containerMetaData);
+  containerRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Delete Container metadata
+  vector<string> containerMetaDataDeleteKeys;
+  containerMetaDataDeleteKeys.push_back("Key 2");
+  containerRes = container.swiftDeleteMetadata(containerMetaDataDeleteKeys);
+  containerRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Update Container metadata
+  containerMetaData.clear();
+  containerMetaData.push_back(make_pair("Key 1", "Container Value 1 updated"));
+  containerRes = container.swiftUpdateMetadata(containerMetaData);
+  containerRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Show Container metadata
+  containerRes = container.swiftShowMetadata();
+  containerRes->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Object Test case
+  Object object(&container, "Object2");
+  string data = "Hello crappy World :)";
+  SwiftResult<void*> *objResult = object.swiftCreateReplaceObject(data.c_str(),
+      data.length(), true);
+  objResult->getResponse()->write(cout);
+  cout << endl << endl;
+
+  //Object get content
+  SwiftResult<istream*>* objReadResult = object.swiftGetObjectContent();
+  StreamCopier::copyStream(*objReadResult->getPayload(), cout);
+  cout << endl << endl;
+
+  Object chucnkedObject(&container, "ChunkedObject");
+  ostream *outStream = nullptr;
+  SwiftResult<HTTPClientSession*> *chunkedResult =
+      chucnkedObject.swiftCreateReplaceObject(outStream);
+
+  ulong max = INT_MAX / 1000;
+  for (ulong i = 0; i < max; i++) {
+    *outStream << i << "\n";
+    if (i % 1000 == 0) {
       double id = i;
-      cout<<(id/(double)max)*100<<" %"<<endl;
+      cout << (id / (double) max) * 100 << " %" << endl;
     }
   }
   HTTPResponse response;
   chunkedResult->getPayload()->receiveResponse(response);
-  response.write(cout);cout<<endl<<endl;
+  response.write(cout);
+  cout << endl << endl;
 
   //Object get content
   SwiftResult<istream*> *readResult = chucnkedObject.swiftGetObjectContent();
   //StreamCopier::copyStream(*readResult->getPayload(),cout);cout<<endl<<endl;
   int bufSize = 1000000;
   char buf[bufSize];
-  while(!readResult->getPayload()->eof())
-    readResult->getPayload()->read(buf,bufSize);*/
-
-
-/*
-  //Create account metadata
-  vector<pair<string, string> > accountMetaData;
-  accountMetaData.push_back(make_pair("Key 1","Value 1"));
-  accountMetaData.push_back(make_pair("Key 2","Value 2"));
-  SwiftResult<void*>* accountMetaDataRes = authenticateResult->getPayload()->swiftCreateMetadata(accountMetaData);
-  accountMetaDataRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //delete account metadata
-  vector<string> accountMetaDataDeleteKeys;
-  accountMetaDataDeleteKeys.push_back("Key 2");
-  accountMetaDataRes = authenticateResult->getPayload()->swiftDeleteMetadata(accountMetaDataDeleteKeys);
-  accountMetaDataRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Update account metadata
-  accountMetaData.clear();
-  accountMetaData.push_back(make_pair("Key 1","Value 1 updated"));
-  accountMetaDataRes = authenticateResult->getPayload()->swiftUpdateMetadata(accountMetaData);
-  accountMetaDataRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Show account metadata
-  accountMetaDataRes = authenticateResult->getPayload()->swiftShowMetadata();
-  accountMetaDataRes->getResponse()->write(cout);cout<<endl<<endl;
-
-
-  //Container Test Cases
-  Container container(authenticateResult->getPayload(),"Container 3");
-
-  //Create container
-  SwiftResult<void*>* containerRes = container.swiftCreateContainer();
-  containerRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Delete container
-  containerRes = container.swiftDeleteContainer();
-  containerRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Get objects of an existing container
-  container.setName("Container2");
-  SwiftResult<istream*>* containerResult = container.swiftListObjects();
-  StreamCopier::copyStream(*containerResult->getPayload(),cout);cout<<endl<<endl;
-
-  //Create Container metadata
-  vector<pair<string, string> > containerMetaData;
-  containerMetaData.push_back(make_pair("Key 1","Container Value 1"));
-  containerMetaData.push_back(make_pair("Key 2","container Value 2"));
-  containerRes = container.swiftCreateMetadata(containerMetaData);
-  containerRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Delete Container metadata
-  vector<string> containerMetaDataDeleteKeys;
-  containerMetaDataDeleteKeys.push_back("Key 2");
-  containerRes = container.swiftDeleteMetadata(containerMetaDataDeleteKeys);
-  containerRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Update Container metadata
-  containerMetaData.clear();
-  containerMetaData.push_back(make_pair("Key 1","Container Value 1 updated"));
-  containerRes = container.swiftUpdateMetadata(containerMetaData);
-  containerRes->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Show Container metadata
-  containerRes = container.swiftShowMetadata();
-  containerRes->getResponse()->write(cout);cout<<endl<<endl;
-
-
-  //Object Test case
-  Object object(&container,"Object2");
-  string data = "Hello crappy World :)";
-  SwiftResult<void*> *objResult = object.swiftCreateReplaceObject(data.c_str(),data.length(),true);
-  objResult->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Object get content
-  SwiftResult<istream*>* objReadResult = object.swiftGetObjectContent();
-  StreamCopier::copyStream(*objReadResult->getPayload(),cout);cout<<endl<<endl;
-
-  //Chunked Object
-  char buf[] = "hello fucking world";
-  membuf sbuf(buf, buf + sizeof(buf));
-  std::istream in(&sbuf);
-  Object objectStream(&container,"ChunkedObj");
-  SwiftResult<void*>* createResult = objectStream.swiftCreateReplaceObject(in,nullptr,nullptr);
-  createResult->getResponse()->write(cout);cout<<endl<<endl;
-
-  //Object get content
-  objReadResult = objectStream.swiftGetObjectContent();
-  StreamCopier::copyStream(*objReadResult->getPayload(),cout);cout<<endl<<endl;
+  while (!readResult->getPayload()->eof())
+    readResult->getPayload()->read(buf, bufSize);
 
   //Copy Object
-  SwiftResult<void*>* copyResult = objectStream.swiftCopyObject("CopyStreamObject",container);
-  copyResult->getResponse()->write(cout);cout<<endl<<endl;
+  SwiftResult<void*>* copyResult = chucnkedObject.swiftCopyObject(
+      "CopyStreamObject", container);
+  copyResult->getResponse()->write(cout);
+  cout << endl << endl;
 
   //Delete Object
-  Object copyStreamObject(&container,"CopyStreamObject");
+  Object copyStreamObject(&container, "CopyStreamObject");
   SwiftResult<istream*>* deleteResult = copyStreamObject.swiftDeleteObject();
-  StreamCopier::copyStream(*deleteResult->getPayload(),cout);cout<<endl<<endl;
+  StreamCopier::copyStream(*deleteResult->getPayload(), cout);
+  cout << endl << endl;
 
   //Object create Metadata
   map<string, string> metaDataMap;
-  metaDataMap.insert(make_pair("Key1","metaData stream object Value 1"));
-  SwiftResult<istream*>* createMetaResult = objectStream.swiftCreateMetadata(metaDataMap);
+  metaDataMap.insert(make_pair("Key1", "metaData stream object Value 1"));
+  SwiftResult<istream*>* createMetaResult = chucnkedObject.swiftCreateMetadata(
+      metaDataMap);
   createMetaResult->getResponse()->write(cout);
-  if(createMetaResult->getPayload()!=nullptr)
-  StreamCopier::copyStream(*createMetaResult->getPayload(),std::cout);cout<<endl<<endl;
+  if (createMetaResult->getPayload() != nullptr)
+    StreamCopier::copyStream(*createMetaResult->getPayload(), std::cout);
+  cout << endl << endl;
 
   //Object show Metadata
-  cout<<endl<<endl<<"MetaDataResult:"<<endl;
-  SwiftResult<void*>* metaDataShowResult = objectStream.swiftShowMetadata();
-  metaDataShowResult->getResponse()->write(cout);cout<<endl<<endl;
+  cout << endl << endl << "MetaDataResult:" << endl;
+  SwiftResult<void*>* metaDataShowResult = chucnkedObject.swiftShowMetadata();
+  metaDataShowResult->getResponse()->write(cout);
+  cout << endl << endl;
 
   //Add More Metadata
   metaDataMap.clear();
-  metaDataMap.insert(make_pair("Key2","metaData Value 2"));
-  metaDataMap.insert(make_pair("Key 3","metaData Value 3"));
-  objectStream.swiftCreateMetadata(metaDataMap);
+  metaDataMap.insert(make_pair("Key2", "metaData Value 2"));
+  metaDataMap.insert(make_pair("Key 3", "metaData Value 3"));
+  chucnkedObject.swiftCreateMetadata(metaDataMap);
 
   //Update Metadata
   metaDataMap.clear();
-  metaDataMap.insert(make_pair("Key2","Updated metaData Gholi Value 2"));
-  objectStream.swiftUpdateMetadata(metaDataMap);
+  metaDataMap.insert(make_pair("Key2", "Updated metaData Gholi Value 2"));
+  chucnkedObject.swiftUpdateMetadata(metaDataMap);
 
   //Delete metadata
   vector<string> keysToDelete;
   keysToDelete.push_back("Key 3");
-  objectStream.swiftDeleteMetadata(keysToDelete);
+  chucnkedObject.swiftDeleteMetadata(keysToDelete);
 
   //Object show Metadata
-  cout<<endl<<endl<<"MetaDataResult:"<<endl;
-  metaDataShowResult = objectStream.swiftShowMetadata();
-  metaDataShowResult->getResponse()->write(cout);cout<<endl<<endl;
+  cout << endl << endl << "MetaDataResult:" << endl;
+  metaDataShowResult = chucnkedObject.swiftShowMetadata();
+  metaDataShowResult->getResponse()->write(cout);
+  cout << endl << endl;
 
   //Total number of calls to the api
-  cout<<"Total Number of Calls to the api:"<<authenticateResult->getPayload()->getNumberOfCalls()<<endl;
-*/
+  cout << "Total Number of Calls to the api:"
+      << authenticateResult->getPayload()->getNumberOfCalls() << endl;
+
 }

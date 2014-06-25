@@ -3,11 +3,14 @@ CXXFLAGS = -g -Wall -fmessage-length=0 -std=c++11
 CFLAGS = -Wno-address -Wno-char-subscripts # -Wno-sign-compare
 
 SWIFT=$(wildcard interface/*.cpp io/*.cpp utils/jsoncpp/*.cpp model/*.cpp header/*.cpp)
+LIBSWIFTHEADERS=$(wildcard interface/*.h io/*.h model/*.h header/*.h)
 TEST=test.cpp
-CXXSOURCES=$(SWIFT) $(TEST)
+CXXSOURCES=$(SWIFT)
+TESTSOURCES=$(TEST)
 #CSOURCES=httpxx/http_parser.c
 
 CXXOBJS=$(CXXSOURCES:%.cpp=%.o)
+TESTOBJS=$(TESTSOURCES:%.cpp=%.o)
 #COBJS=$(CSOURCES:%.c=%.o)
 
 #Includes
@@ -23,18 +26,27 @@ LIBS =-lPocoUtild -lPocoUtil -lPocoXML -lPocoNet -lPocoNetd -lPocoFoundation -lP
 
 
 TARGET =	SwiftSDK
+LIBSWIFT = libSwift.a
 
 CXX=clang++
-all:	$(TARGET)
+all: $(LIBSWIFT) $(TARGET)
 
-$(TARGET):	$(CXXOBJS) $(COBJS)
+$(LIBSWIFT): $(CXXOBJS)
+	ar rcs $@ $^
+	mkdir build/libSwift
+	mkdir build/libSwift/include
+	mkdir build/libSwift/lib
+	mv -f $(LIBSWIFT) build/libSwift/lib
+	cp -rf $(LIBSWIFTHEADERS) build/libSwift/include
+	cp -rf utils/jsoncpp/json utils/poco build
+
+$(TARGET):	$(CXXOBJS) $(COBJS) $(TESTOBJS)
 #	$(CXX) -o $(TARGET) $(CXXOBJS) $(LIBS) $(COBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(CXXOBJS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(CXXOBJS) $(TESTOBJS) $(LIBS)
 
 #$(COBJS): %.o: %.c
 #	$(CC) $(CFLAGS) -c $< -o $@
 
 
 clean:
-#	rm -f $(COBJS) $(CXXOBJS) $(TARGET)
-	rm -f $(CXXOBJS) $(TARGET)
+	rm -rf $(CXXOBJS) $(TARGET) $(TESTOBJS) $(LIBSWIFT) $(wildcard build/*)
