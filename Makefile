@@ -14,7 +14,7 @@ TESTOBJS=$(TESTSOURCES:%.cpp=%.o)
 #COBJS=$(CSOURCES:%.c=%.o)
 
 #Includes
-LFLAGS=-Iutils/poco/include -Iutils/jsoncpp
+LFLAGS=-Iutils/poco/include -Iutils/jsoncpp -Iheader -Iinterface -Iio -Imodel
 CXXFLAGS+= $(LFLAGS)
 
 #Libraries
@@ -33,12 +33,13 @@ all: $(LIBSWIFT) $(TARGET)
 
 $(LIBSWIFT): $(CXXOBJS)
 	ar rcs $@ $^
-	mkdir build/libSwift
-	mkdir build/libSwift/include
-	mkdir build/libSwift/lib
+	mkdir -p build/libSwift/include/swift
+	mkdir -p build/libSwift/lib
 	mv -f $(LIBSWIFT) build/libSwift/lib
-	cp -rf $(LIBSWIFTHEADERS) build/libSwift/include
-	cp -rf utils/jsoncpp/json utils/poco build
+	cp -rf $(LIBSWIFTHEADERS) build/libSwift/include/swift
+	cp -rf utils/poco build
+	mkdir -p build/json
+	cp -rf utils/jsoncpp/json build/json
 
 $(TARGET):	$(CXXOBJS) $(COBJS) $(TESTOBJS)
 #	$(CXX) -o $(TARGET) $(CXXOBJS) $(LIBS) $(COBJS)

@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <json/json.h>
-#include "Endpoint.h"
+#include <Endpoint.h>
 
 namespace Swift {
 /**

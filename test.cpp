@@ -76,8 +76,16 @@ int main(int argc, char** argv) {
   accountMetaDataRes->getResponse()->write(cout);
   cout << endl << endl;
 
+  //List containers
+  SwiftResult<vector<Container*>*>* containerListRes = authenticateResult->getPayload()->swiftGetContainers();
+  cout<<"Num of Container:"<<containerListRes->getPayload()->size()<<endl;;
+  if(containerListRes->getError().code == SWIFT_OK.code)
+    for(auto it=containerListRes->getPayload()->begin();it!=containerListRes->getPayload()->end();++it)
+      cout<<"Container:"<<(*it)->getName()<<endl;
+  cout<<endl;
+
   //Container Test Cases
-  Container container(authenticateResult->getPayload(), "Container 3");
+  Container container(authenticateResult->getPayload(), "Container2");
 
   //Create container
   SwiftResult<void*>* containerRes = container.swiftCreateContainer();
@@ -87,24 +95,28 @@ int main(int argc, char** argv) {
   //Container list objects test
   Container container2(authenticateResult->getPayload(), "Container2");
   SwiftResult<vector<Object*>*>* objects = container2.swiftGetObjects(true);
-  for (int i = 0; i < objects->getPayload()->size(); i++) {
-    cout << objects->getPayload()->at(i)->getName() << "\tLength:"
-        << objects->getPayload()->at(i)->getLength() << "\tType:"
-        << objects->getPayload()->at(i)->getContentType() << "\tHash:"
-        << objects->getPayload()->at(i)->getHash() << "\tLastModiefied:"
-        << objects->getPayload()->at(i)->getLastModified() << endl;
-    ;
-  }
+  if(objects->getError().code == SwiftError::SWIFT_OK)
+    for (int i = 0; i < objects->getPayload()->size(); i++) {
+      cout << objects->getPayload()->at(i)->getName() << "\tLength:"
+          << objects->getPayload()->at(i)->getLength() << "\tType:"
+          << objects->getPayload()->at(i)->getContentType() << "\tHash:"
+          << objects->getPayload()->at(i)->getHash() << "\tLastModiefied:"
+          << objects->getPayload()->at(i)->getLastModified() << endl;
+    }
 
   //Delete container
   containerRes = container.swiftDeleteContainer();
   containerRes->getResponse()->write(cout);
   cout << endl << endl;
 
+  //Create Again
+  container.swiftCreateContainer();
+
   //Get objects of an existing container
   container.setName("Container2");
   SwiftResult<istream*>* containerResult = container.swiftListObjects();
-  StreamCopier::copyStream(*containerResult->getPayload(), cout);
+  if(containerResult->getError().code == SwiftError::SWIFT_OK)
+    StreamCopier::copyStream(*containerResult->getPayload(), cout);
   cout << endl << endl;
 
   //Create Container metadata
@@ -144,7 +156,8 @@ int main(int argc, char** argv) {
 
   //Object get content
   SwiftResult<istream*>* objReadResult = object.swiftGetObjectContent();
-  StreamCopier::copyStream(*objReadResult->getPayload(), cout);
+  if(objReadResult->getError().code == SwiftError::SWIFT_OK)
+    StreamCopier::copyStream(*objReadResult->getPayload(), cout);
   cout << endl << endl;
 
   Object chucnkedObject(&container, "ChunkedObject");

@@ -14,6 +14,9 @@ using namespace std;
 using namespace Poco::Net;
 using namespace Poco;
 
+static HTTPClientSession *httpSession = nullptr;
+static istream* resultStream = nullptr;
+
 Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     const std::string& type, std::vector<HTTPHeader>* params) {
   Poco::Net::HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
@@ -190,8 +193,15 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
 
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
-  istream* resultStream = nullptr;
-  HTTPClientSession *httpSession = nullptr;
+  //istream* resultStream;
+  //HTTPClientSession *httpSession = nullptr;
+  if(httpSession != nullptr) {
+    httpSession->reset();
+    delete httpSession;
+    httpSession = nullptr;
+    resultStream = nullptr;
+  }
+
   try {
     /** This operation does not accept a request body. **/
     if (bodyReqBuffer == nullptr)
@@ -215,8 +225,6 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     //Try to set HTTP Response as the payload
     result->setResponse(httpResponse);
     result->setPayload(nullptr);
-    //Cleanup
-    delete httpSession;
     return result;
   }
 
@@ -236,8 +244,6 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     result->setError(error);
     result->setResponse(httpResponse);
     result->setPayload(nullptr);
-    //Cleanup
-    delete httpSession;
     return result;
   }
 
@@ -247,7 +253,6 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   result->setResponse(httpResponse);
   result->setPayload(resultStream);
   //Cleanup
-  delete httpSession;
   return result;
 }
 

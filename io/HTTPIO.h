@@ -19,9 +19,9 @@
 #include <Poco/URI.h>
 #include <iostream>
 #include <vector>
-#include "../header/Header.h"
-#include "../interface/SwiftResult.h"
-#include "../model/Account.h"
+#include <Header.h>
+#include <SwiftResult.h>
+#include <Account.h>
 
 namespace Swift {
 

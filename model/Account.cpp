@@ -359,6 +359,9 @@ SwiftResult<vector<Container*>*>* Account::swiftGetContainers(bool _newest) {
   //Parse JSON
   Json::Value root;   // will contains the root value after parsing.
   Json::Reader reader;
+  //cout<<endl<<"INJA::"<<flush(cout)<<endl<<"EOF?"<<accountDetail->getPayload()->eof()<<endl;;
+  //StreamCopier::copyStream(*accountDetail->getPayload(),cout);
+  //cout<<endl<<"INJA2::"<<flush(cout)<<endl;;
   bool parsingSuccessful = reader.parse(*accountDetail->getPayload(), root, false);
   if (!parsingSuccessful) {
     SwiftError error(SwiftError::SWIFT_JSON_PARSE_ERROR,

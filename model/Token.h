@@ -9,7 +9,7 @@
 #define TOKEN_H_
 
 #include <iostream>
-#include "Tenant.h"
+#include <Tenant.h>
 #include <json/json.h>
 
 namespace Swift {

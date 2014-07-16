@@ -10,8 +10,8 @@
 
 #include <Poco/HashMap.h>
 #include <cstring>
-#include "ErrorNo.h"
-#include "ConfigKey.h"
+#include <ErrorNo.h>
+#include <ConfigKey.h>
 
 namespace Swift {
 
