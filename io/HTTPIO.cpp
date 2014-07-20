@@ -7,6 +7,7 @@
 
 #include "HTTPIO.h"
 #include <sstream>      // ostringstream
+#include <mutex>
 
 namespace Swift {
 
@@ -16,6 +17,7 @@ using namespace Poco;
 
 static HTTPClientSession *httpSession = nullptr;
 static istream* resultStream = nullptr;
+mutex transactionMutex;
 
 Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     const std::string& type, std::vector<HTTPHeader>* params) {
@@ -152,6 +154,9 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     const std::string &_method, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap, std::vector<int> *_httpValidCodes,
     const char *bodyReqBuffer, ulong size, std::string *contentType) {
+  //Start locking
+  lock_guard<mutex> guard(transactionMutex);
+  //Start of function
   if (_account == nullptr)
     return returnNullError<T>("account");
   Endpoint* swiftEndpoint = _account->getSwiftService()->getFirstEndpoint();
