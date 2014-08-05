@@ -15,8 +15,6 @@ using namespace std;
 using namespace Poco::Net;
 using namespace Poco;
 
-static HTTPClientSession *httpSession = nullptr;
-static istream* resultStream = nullptr;
 mutex transactionMutex;
 
 Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
@@ -198,14 +196,16 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
 
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
+  HTTPClientSession *httpSession = nullptr;
+  istream* resultStream = nullptr;
   //istream* resultStream;
   //HTTPClientSession *httpSession = nullptr;
-  if(httpSession != nullptr) {
+  /*if(httpSession != nullptr) {
     httpSession->reset();
     delete httpSession;
     httpSession = nullptr;
     resultStream = nullptr;
-  }
+  }*/
 
   try {
     /** This operation does not accept a request body. **/
@@ -228,6 +228,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
     result->setError(error);
     //Try to set HTTP Response as the payload
+    result->setSession(httpSession);
     result->setResponse(httpResponse);
     result->setPayload(nullptr);
     return result;
@@ -247,6 +248,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     SwiftResult<T> *result = new SwiftResult<T>();
     SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
     result->setError(error);
+    result->setSession(httpSession);
     result->setResponse(httpResponse);
     result->setPayload(nullptr);
     return result;
@@ -255,6 +257,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   //Everything seems fine
   SwiftResult<T> *result = new SwiftResult<T>();
   result->setError(SWIFT_OK);
+  result->setSession(httpSession);
   result->setResponse(httpResponse);
   result->setPayload(resultStream);
   //Cleanup

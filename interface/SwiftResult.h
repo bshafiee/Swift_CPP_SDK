@@ -10,6 +10,7 @@
 
 //#include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPResponse.h>
+#include <Poco/Net/HTTPClientSession.h>
 #include <iostream>
 #include <ErrorNo.h>
 
@@ -18,15 +19,30 @@ namespace Swift {
 template <class T>
 class SwiftResult {
   Poco::Net::HTTPResponse *response;
+  Poco::Net::HTTPClientSession *session;
   SwiftError error;
   /** Real Data **/
   T payload;
 
 public:
-  SwiftResult():response(nullptr), error(SwiftError::SWIFT_OK,"SWIFT_OK")  {
+  SwiftResult():response(nullptr), session(nullptr), error(SwiftError::SWIFT_OK,"SWIFT_OK")  {
   }
 
-  virtual ~SwiftResult()  {
+  virtual ~SwiftResult() {
+    if(response!=nullptr) {
+      delete response;
+      response = nullptr;
+    }
+    /*if(payload!=nullptr) {
+      delete payload;
+      payload = nullptr;
+    }*/
+    if(session!=nullptr) {
+      delete session;
+      session = nullptr;
+    }
+
+    std::cout <<"DESTRUCTOR SWIFTRESULT"<<std::endl;
   }
 
   const SwiftError& getError() const {
@@ -51,6 +67,14 @@ public:
 
   void setResponse(Poco::Net::HTTPResponse* response) {
     this->response = response;
+  }
+
+  Poco::Net::HTTPClientSession* getSession() const {
+    return session;
+  }
+
+  void setSession(Poco::Net::HTTPClientSession* _session) {
+    this->session = _session;
   }
 };
 

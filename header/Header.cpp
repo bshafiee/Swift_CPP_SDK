@@ -14,6 +14,9 @@ HTTPHeader::HTTPHeader(std::string key,std::string value) {
   pair = std::make_pair(key,value);
 }
 
+Swift::HTTPHeader::~HTTPHeader() {
+}
+
 std::string HTTPHeader::getKey() {
   return pair.first;
 }
@@ -32,3 +35,4 @@ HTTPHeader HEADER_FORMAT_APPLICATION_XML("format", "xml");
 HTTPHeader HEADER_FORMAT_TEXT_XML("format", "text/xml");
 
 } /* namespace Swift */
+

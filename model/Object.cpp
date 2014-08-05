@@ -301,6 +301,7 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
     SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
     result->setError(error);
     //Try to set HTTP Response as the payload
+    result->setSession(httpSession);
     result->setResponse(nullptr);
     result->setPayload(nullptr);
     return result;
@@ -309,6 +310,7 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
   //Everything seems fine
   SwiftResult<HTTPClientSession*> *result = new SwiftResult<HTTPClientSession*>();
   result->setError(SWIFT_OK);
+  result->setSession(httpSession);
   result->setResponse(nullptr);
   result->setPayload(httpSession);
   return result;

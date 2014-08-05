@@ -78,6 +78,7 @@ SwiftResult<Account*>* Account::authenticate(
     //Try to set HTTP Response as the payload
     //httpSession->receiveResponse(*httpResponse);
     result->setResponse(httpResponse);
+    result->setSession(httpSession);
     result->setPayload(nullptr);
     return result;
   }
@@ -88,6 +89,7 @@ SwiftResult<Account*>* Account::authenticate(
     SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
     result->setError(error);
     result->setResponse(httpResponse);
+    result->setSession(httpSession);
     result->setPayload(nullptr);
     return result;
   }
@@ -102,6 +104,7 @@ SwiftResult<Account*>* Account::authenticate(
         reader.getFormattedErrorMessages());
     result->setError(error);
     result->setResponse(httpResponse);
+    result->setSession(httpSession);
     result->setPayload(nullptr);
     return result;
   }
@@ -144,6 +147,7 @@ SwiftResult<Account*>* Account::authenticate(
   SwiftError error(SwiftError::SWIFT_OK, "SWIFT_OK");
   result->setError(error);
   result->setResponse(httpResponse);
+  result->setSession(httpSession);
   result->setPayload(instance);
 
   return result;
@@ -349,6 +353,7 @@ SwiftResult<vector<Container*>*>* Account::swiftGetContainers(bool _newest) {
   SwiftResult<vector<Container*>*> *result = new SwiftResult<vector<Container*>*>();
   result->setError(accountDetail->getError());
   result->setResponse(accountDetail->getResponse());
+  result->setSession(accountDetail->getSession());
 
   //Check error
   if(accountDetail->getError().code != SWIFT_OK.code) {
