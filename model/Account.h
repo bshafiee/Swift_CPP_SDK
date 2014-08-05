@@ -50,12 +50,12 @@ private:
   /**
    * Account Roles
    */
-  std::vector<Role> roles;
+  std::vector<Role*> roles;
 
   /**
    * Openstack Services
    */
-  std::vector<Service> services;
+  std::vector<Service*> services;
 
   /**
    * ObjectStore tokens expire after 24 hours. If reauthentication is allowed (default behaviour),

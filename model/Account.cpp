@@ -36,7 +36,22 @@ struct Role {
 };
 
 Account::~Account() {
-  // TODO Auto-generated destructor stub
+  //Delete Token
+  delete token;
+  token = nullptr;
+  //Delete roles
+  for(Role* role:roles) {
+    delete role;
+    role = nullptr;
+  }
+  roles.clear();
+  //Delete Services
+  for(Service* service:services) {
+    delete service;
+    service = nullptr;
+  }
+  services.clear();
+
 }
 
 Account::Account() :
@@ -126,7 +141,7 @@ SwiftResult<Account*>* Account::authenticate(
   if (roles != Json::nullValue) {
     for (uint i = 0; i < roles.size(); i++) {
       Role *role = Role::fromJSON(roles[i]);
-      instance->roles.push_back(*role);
+      instance->roles.push_back(role);
     }
   }
   //Parse Token
@@ -136,7 +151,7 @@ SwiftResult<Account*>* Account::authenticate(
   Json::Value serviceRoot = root.get("serviceCatalog", Json::nullValue);
   if (serviceRoot != Json::nullValue)
     for (uint i = 0; i < serviceRoot.size(); i++)
-      instance->services.push_back(*Service::fromJSON(serviceRoot[i]));
+      instance->services.push_back(Service::fromJSON(serviceRoot[i]));
 
   //Return result
   instance->authInfo.password = _authInfo.password;
@@ -194,8 +209,8 @@ Token* Account::getToken() {
 
 Service* Account::getSwiftService() {
   for (uint i = 0; i < services.size(); i++)
-    if (services[i].getType() == "object-store")
-      return &services[i];
+    if (services[i]->getType() == "object-store")
+      return services[i];
   return nullptr;
 }
 
@@ -207,14 +222,24 @@ string Account::toString() {
 
   //Build Roles
   roleStream << "Roles: {";
-  for (uint i = 0; i < roles.size(); i++)
-    roleStream << jsonWriter.write(*Role::toJSON(roles[i])) << ",";
+  for (uint i = 0; i < roles.size(); i++) {
+    Json::Value* roleJSON = Role::toJSON(*roles[i]);
+    roleStream << jsonWriter.write(*roleJSON) << ",";
+    delete roleJSON;
+    roleJSON = nullptr;
+  }
   roleStream << "}";
   //Build Services
   serviceStream << "Services: {";
-  for (uint i = 0; i < services.size(); i++)
-    serviceStream << jsonWriter.write(*Service::toJSON(services[i])) << ",";
+  for (uint i = 0; i < services.size(); i++) {
+    Json::Value* serviceJSON = Service::toJSON(*services[i]);
+    serviceStream << jsonWriter.write(*serviceJSON) << ",";
+    delete serviceJSON;
+    serviceJSON = nullptr;
+  }
   serviceStream << "}";
+
+  Json::Value* tokenJSON = Token::toJSON(*this->token);
 
   output << "userID:" << userID << ",\n" << "name:" << name << ",\n"
       << "username:" << authInfo.username << ",\n" << "password:"
@@ -223,9 +248,11 @@ string Account::toString() {
       << "preferredRegion:" << preferredRegion << ",\n" << "delimiter:"
       << delimiter << ",\n" << "authenticationmethod:"
       << authenticationMethodToString(authInfo.method) << ",\n" << "token:"
-      << jsonWriter.write(*Token::toJSON(*this->token)) << ",\n"
+      << jsonWriter.write(*tokenJSON) << ",\n"
       << roleStream.str() << ",\n" << serviceStream.str();
 
+  delete tokenJSON;
+  tokenJSON = nullptr;
   return output.str();
 }
 

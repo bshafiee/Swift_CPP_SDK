@@ -33,10 +33,10 @@ public:
       delete response;
       response = nullptr;
     }
-    /*if(payload!=nullptr) {
-      delete payload;
+    if(payload!=nullptr) {
+      delete static_cast<T>(payload);
       payload = nullptr;
-    }*/
+    }
     if(session!=nullptr) {
       delete session;
       session = nullptr;

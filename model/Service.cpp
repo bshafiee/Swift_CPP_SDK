@@ -15,7 +15,12 @@ Service::Service() :
 }
 
 Service::~Service() {
-  // TODO Auto-generated destructor stub
+  //Delete endpoints
+  for(Endpoint* endpoint:endpoints) {
+    delete endpoint;
+    endpoint = nullptr;
+  }
+
 }
 
 Service* Service::fromJSON(const Json::Value &val) {
@@ -26,7 +31,7 @@ Service* Service::fromJSON(const Json::Value &val) {
   //Parsing endpoint array information
   Json::Value endpoint = val.get("endpoints",Json::nullValue);
   for(uint i=0;i<endpoint.size();i++)
-    instance->endpoints.push_back(*Endpoint::fromJSON(endpoint[i]));
+    instance->endpoints.push_back(Endpoint::fromJSON(endpoint[i]));
 
   return instance;
 }
@@ -39,16 +44,16 @@ Json::Value* Service::toJSON(const Service &instance) {
   //Create endpoints Arrayindex
   (*json)["endpoints"] = Json::Value(Json::arrayValue);
   for(uint i=0;i<instance.getEndpoints().size();i++) {
-    Json::Value *info = new Json::Value();
+    Json::Value info;
 
-    std::string tmp = instance.getEndpoints()[i].getId();
-    (*info)["id"] = instance.getEndpoints()[i].getId();
-    (*info)["adminURL"] = instance.getEndpoints()[i].getAdminUrl();
-    (*info)["internalURL"] = instance.getEndpoints()[i].getInternalUrl();
-    (*info)["publicURL"] = instance.getEndpoints()[i].getPublicUrl();
-    (*info)["region"] = instance.getEndpoints()[i].getRegion();
+    std::string tmp = instance.getEndpoints()[i]->getId();
+    (info)["id"] = instance.getEndpoints()[i]->getId();
+    (info)["adminURL"] = instance.getEndpoints()[i]->getAdminUrl();
+    (info)["internalURL"] = instance.getEndpoints()[i]->getInternalUrl();
+    (info)["publicURL"] = instance.getEndpoints()[i]->getPublicUrl();
+    (info)["region"] = instance.getEndpoints()[i]->getRegion();
 
-    (*json)["endpoints"].append(*info);
+    (*json)["endpoints"].append(info);
   }
 
   return json;
@@ -66,11 +71,11 @@ const std::string& Service::getType() const {
   return type;
 }
 
-const std::vector<Endpoint>& Service::getEndpoints() const {
+const std::vector<Endpoint*>& Service::getEndpoints() const {
   return endpoints;
 }
 
-void Service::setEndpoints(const std::vector<Endpoint>& endpoints) {
+void Service::setEndpoints(const std::vector<Endpoint*>& endpoints) {
   this->endpoints = endpoints;
 }
 
@@ -80,7 +85,7 @@ void Service::setType(const std::string& type) {
 
 Endpoint* Service::getFirstEndpoint() {
   if(endpoints.size() > 0)
-    return &endpoints[0];
+    return endpoints[0];
   else
     return nullptr;
 }

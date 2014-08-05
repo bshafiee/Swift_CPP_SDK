@@ -24,7 +24,8 @@ Token::Token(const std::string& _expires, const std::string& _id,
 }
 
 Token::~Token() {
-	// TODO Auto-generated destructor stub
+	delete tenant;
+	tenant = nullptr;
 }
 
 Token* Token::fromJSON(const Json::Value &val) {
@@ -41,11 +42,15 @@ Token* Token::fromJSON(const Json::Value &val) {
 Json::Value* Token::toJSON(const Token &instance) {
 	Json::Value* json = new Json::Value();
 
+	Json::Value* tenantJSON = Tenant::toJSON(*instance.getTenant());
+
 	(*json)["id"] = instance.getId();
 	(*json)["expires"] = instance.getExpires();
 	(*json)["issued_at"] = instance.getIssuedAt();
-	(*json)["tenant"] = *Tenant::toJSON(*instance.getTenant());
+	(*json)["tenant"] = *tenantJSON;
 
+	delete tenantJSON;
+	tenantJSON = nullptr;
 	return json;
 }
 

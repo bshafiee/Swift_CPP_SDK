@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   StreamCopier::copyStream(*accountDetails->getPayload(), cout);
   cout << endl << endl;
   delete accountDetails;
-
+/*
   //Create account metadata
   vector<pair<string, string> > accountMetaData;
   accountMetaData.push_back(make_pair("Key 1", "Value 1"));
@@ -267,6 +267,6 @@ int main(int argc, char** argv) {
   //Total number of calls to the api
   cout << "Total Number of Calls to the api:"
       << authenticateResult->getPayload()->getNumberOfCalls() << endl;
-
+*/
   delete authenticateResult;
 }
