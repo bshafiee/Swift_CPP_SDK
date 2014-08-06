@@ -51,8 +51,10 @@ SwiftResult<std::istream*>* Container::swiftListObjects(
 
   //add X-Newest
   std::vector<HTTPHeader> _reqMap;
-  if (_newest)
-    _reqMap.push_back(*new HTTPHeader("X-Newest", "True"));
+  if (_newest){
+    HTTPHeader header("X-Newest", "True");
+    _reqMap.push_back(header);
+  }
   //Push Header Format
   bool shouldDelete = false;
   if (_uriParam == nullptr) {
@@ -142,10 +144,11 @@ SwiftResult<void*>* Container::swiftCreateMetadata(
       _reqMap = new vector<HTTPHeader>();
       shouldDelete = true;
     }
-    for (uint i = 0; i < _metaData.size(); i++)
-      _reqMap->push_back(
-          *new HTTPHeader("X-Container-Meta-" + _metaData[i].first,
-              _metaData[i].second));
+    for (uint i = 0; i < _metaData.size(); i++) {
+      HTTPHeader header("X-Container-Meta-" + _metaData[i].first,
+          _metaData[i].second);
+      _reqMap->push_back(header);
+    }
   }
 
   //Do swift transaction
@@ -188,9 +191,10 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(
       _reqMap = new vector<HTTPHeader>();
       shouldDelete = true;
     }
-    for (uint i = 0; i < _metaDataKeys.size(); i++)
-      _reqMap->push_back(
-          *new HTTPHeader("X-Remove-Container-Meta-" + _metaDataKeys[i], "x"));
+    for (uint i = 0; i < _metaDataKeys.size(); i++) {
+      HTTPHeader header("X-Remove-Container-Meta-" + _metaDataKeys[i], "x");
+      _reqMap->push_back(header);
+    }
   }
 
   //Do swift transaction
@@ -208,11 +212,12 @@ std::string& Container::getName() {
   return name;
 }
 
-SwiftResult<vector<Object*>*>* Container::swiftGetObjects(bool _newest) {
+SwiftResult<vector<Object>*>* Container::swiftGetObjects(bool _newest) {
   SwiftResult<istream*> *objectList = this->swiftListObjects(HEADER_FORMAT_APPLICATION_JSON,nullptr,_newest);
-  SwiftResult<vector<Object*>*> *result = new SwiftResult<vector<Object*>*>();
+  SwiftResult<vector<Object>*> *result = new SwiftResult<vector<Object>*>();
   result->setError(objectList->getError());
   result->setResponse(objectList->getResponse());
+  result->setSession(objectList->getSession());
 
   //Check error
   if(objectList->getError().code != SWIFT_OK.code) {
@@ -233,7 +238,7 @@ SwiftResult<vector<Object*>*>* Container::swiftGetObjects(bool _newest) {
   }
 
   //Allocate containers
-  vector<Object*>*objects = new vector<Object*>();
+  vector<Object>*objects = new vector<Object>();
   //Successful parse
   for(int i=0;i<root.size();i++) {
     string name = root[i].get("name","").asString();
@@ -242,7 +247,7 @@ SwiftResult<vector<Object*>*>* Container::swiftGetObjects(bool _newest) {
     string hash = root[i].get("hash","").asString();
     string last_modified = root[i].get("last_modified","").asString();
     //Create new object
-    Object *object = new Object(this,name,length,content_type,hash,last_modified);
+    Object object(this,name,length,content_type,hash,last_modified);
     objects->push_back(object);
   }
 

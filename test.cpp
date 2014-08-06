@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   StreamCopier::copyStream(*accountDetails->getPayload(), cout);
   cout << endl << endl;
   delete accountDetails;
-/*
+
   //Create account metadata
   vector<pair<string, string> > accountMetaData;
   accountMetaData.push_back(make_pair("Key 1", "Value 1"));
@@ -82,11 +82,11 @@ int main(int argc, char** argv) {
   delete accountMetaDataRes;
 
   //List containers
-  SwiftResult<vector<Container*>*>* containerListRes = authenticateResult->getPayload()->swiftGetContainers();
+  SwiftResult<vector<Container>*>* containerListRes = authenticateResult->getPayload()->swiftGetContainers();
   cout<<"Num of Container:"<<containerListRes->getPayload()->size()<<endl;;
   if(containerListRes->getError().code == SWIFT_OK.code)
     for(auto it=containerListRes->getPayload()->begin();it!=containerListRes->getPayload()->end();++it)
-      cout<<"Container:"<<(*it)->getName()<<endl;
+      cout<<"Container:"<<(*it).getName()<<endl;
   cout<<endl;
   delete containerListRes;
 
@@ -101,14 +101,14 @@ int main(int argc, char** argv) {
 
   //Container list objects test
   Container container2(authenticateResult->getPayload(), "Container2");
-  SwiftResult<vector<Object*>*>* objects = container2.swiftGetObjects(true);
+  SwiftResult<vector<Object>*>* objects = container2.swiftGetObjects(true);
   if(objects->getError().code == SwiftError::SWIFT_OK)
     for (int i = 0; i < objects->getPayload()->size(); i++) {
-      cout << objects->getPayload()->at(i)->getName() << "\tLength:"
-          << objects->getPayload()->at(i)->getLength() << "\tType:"
-          << objects->getPayload()->at(i)->getContentType() << "\tHash:"
-          << objects->getPayload()->at(i)->getHash() << "\tLastModiefied:"
-          << objects->getPayload()->at(i)->getLastModified() << endl;
+      cout << objects->getPayload()->at(i).getName() << "\tLength:"
+          << objects->getPayload()->at(i).getLength() << "\tType:"
+          << objects->getPayload()->at(i).getContentType() << "\tHash:"
+          << objects->getPayload()->at(i).getHash() << "\tLastModiefied:"
+          << objects->getPayload()->at(i).getLastModified() << endl;
     }
   delete objects;
 
@@ -215,7 +215,8 @@ int main(int argc, char** argv) {
   //Delete Object
   Object copyStreamObject(&container, "CopyStreamObject");
   SwiftResult<istream*>* deleteResult = copyStreamObject.swiftDeleteObject();
-  StreamCopier::copyStream(*deleteResult->getPayload(), cout);
+  if(deleteResult->getError().code == SWIFT_OK.code)
+    StreamCopier::copyStream(*deleteResult->getPayload(), cout);
   cout << endl << endl;
   delete deleteResult;
 
@@ -267,6 +268,6 @@ int main(int argc, char** argv) {
   //Total number of calls to the api
   cout << "Total Number of Calls to the api:"
       << authenticateResult->getPayload()->getNumberOfCalls() << endl;
-*/
+
   delete authenticateResult;
 }

@@ -221,8 +221,8 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
 
     //Now we should increase number of calls to SWIFT API
     _account->increaseCallCounter();
-
-    resultStream = &httpSession->receiveResponse(*httpResponse);
+    if (std::is_same<T, std::istream*>::value)
+      resultStream = &httpSession->receiveResponse(*httpResponse);
   } catch (Exception &e) {
     SwiftResult<T> *result = new SwiftResult<T>();
     SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());

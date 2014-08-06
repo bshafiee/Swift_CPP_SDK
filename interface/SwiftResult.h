@@ -13,6 +13,8 @@
 #include <Poco/Net/HTTPClientSession.h>
 #include <iostream>
 #include <ErrorNo.h>
+#include <typeinfo>
+#include <type_traits>
 
 namespace Swift {
 
@@ -33,16 +35,20 @@ public:
       delete response;
       response = nullptr;
     }
-    if(payload!=nullptr) {
-      delete static_cast<T>(payload);
-      payload = nullptr;
-    }
     if(session!=nullptr) {
       delete session;
       session = nullptr;
     }
 
-    std::cout <<"DESTRUCTOR SWIFTRESULT"<<std::endl;
+    if(payload!=nullptr) {
+      //Istream is part of session which is being deleted in the next statement
+      if (!std::is_same<T, std::istream*>::value &&
+          !std::is_same<T, Poco::Net::HTTPClientSession*>::value)//session as paylod
+        delete static_cast<T>(payload);
+      payload = nullptr;
+    }
+
+    //std::cout <<"DESTRUCTOR SWIFTRESULT"<<std::endl;
   }
 
   const SwiftError& getError() const {

@@ -162,7 +162,7 @@ public:
   /**
    * Get All Containers
    */
-  SwiftResult<std::vector<Container*>*>* swiftGetContainers(bool _newest = false);
+  SwiftResult<std::vector<Container>*>* swiftGetContainers(bool _newest = false);
 
   SwiftResult<std::istream*>* swiftAccountDetails(HTTPHeader &_formatHeader =
       HEADER_FORMAT_APPLICATION_JSON,

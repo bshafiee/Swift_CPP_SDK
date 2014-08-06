@@ -318,10 +318,10 @@ SwiftResult<void*>* Account::swiftCreateMetadata(
       _reqMap = new vector<HTTPHeader>();
       shouldDelete = true;
     }
-    for (uint i = 0; i < _metaData.size(); i++)
-      _reqMap->push_back(
-          *new HTTPHeader("X-Account-Meta-" + _metaData[i].first,
-              _metaData[i].second));
+    for (uint i = 0; i < _metaData.size(); i++) {
+      HTTPHeader header("X-Account-Meta-" + _metaData[i].first, _metaData[i].second);
+      _reqMap->push_back(header);
+    }
   }
 
   //Do swift transaction
@@ -358,8 +358,10 @@ SwiftResult<void*>* Account::swiftDeleteMetadata(
       _reqMap = new vector<HTTPHeader>();
       shouldDelete = true;
     }
-    for (uint i = 0; i < _metaDataKeys.size(); i++)
-      _reqMap->push_back(*new HTTPHeader("X-Remove-Account-Meta-" + _metaDataKeys[i], "x"));
+    for (uint i = 0; i < _metaDataKeys.size(); i++) {
+      HTTPHeader header("X-Remove-Account-Meta-" + _metaDataKeys[i], "x");
+      _reqMap->push_back(header);
+    }
   }
 
   //Do swift transaction
@@ -375,9 +377,9 @@ SwiftResult<void*>* Account::swiftDeleteMetadata(
     }
 }
 
-SwiftResult<vector<Container*>*>* Account::swiftGetContainers(bool _newest) {
+SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
   SwiftResult<istream*> *accountDetail = this->swiftAccountDetails(HEADER_FORMAT_APPLICATION_JSON,nullptr,_newest);
-  SwiftResult<vector<Container*>*> *result = new SwiftResult<vector<Container*>*>();
+  SwiftResult<vector<Container>*> *result = new SwiftResult<vector<Container>*>();
   result->setError(accountDetail->getError());
   result->setResponse(accountDetail->getResponse());
   result->setSession(accountDetail->getSession());
@@ -404,11 +406,11 @@ SwiftResult<vector<Container*>*>* Account::swiftGetContainers(bool _newest) {
   }
 
   //Allocate containers
-  vector<Container*>*containers = new vector<Container*>();
+  vector<Container>*containers = new vector<Container>();
   //Successful parse
   for(int i=0;i<root.size();i++) {
     string name = root[i].get("name","").asString();
-    Container *container = new Container(this,name);
+    Container container(this,name);
     containers->push_back(container);
   }
 

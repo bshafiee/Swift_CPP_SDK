@@ -83,7 +83,8 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
       _reqMap = new vector<HTTPHeader>();
       shouldDelete = true;
     }
-    _reqMap->push_back(*new HTTPHeader("ETag", digestString));
+    HTTPHeader etagHeader("ETag", digestString);
+    _reqMap->push_back(etagHeader);
   }
 
   //Do swift transaction
@@ -119,9 +120,8 @@ SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
     _reqMap = new vector<HTTPHeader>();
     shouldDelete = true;
   }
-  _reqMap->push_back(
-      *new HTTPHeader("Destination",
-          _dstContainer.getName() + "/" + _dstObjectName));
+  HTTPHeader destHeader("Destination", _dstContainer.getName() + "/" + _dstObjectName);
+  _reqMap->push_back(destHeader);
 
   //Do swift transaction
   SwiftResult<void*>* result = doSwiftTransaction<void*>(
@@ -189,6 +189,11 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
           _metaData.insert(
               map<string, string>::value_type(existingMeta->at(i).first,
                   existingMeta->at(i).second));
+    if(existingMeta!= nullptr){
+      existingMeta->clear();
+      delete existingMeta;
+      existingMeta = nullptr;
+    }
   }
 
   //Add Actual metadata
@@ -199,9 +204,10 @@ SwiftResult<istream*>* Object::swiftCreateMetadata(
       shouldDelete = true;
     }
     for (map<string, string>::iterator it = _metaData.begin();
-        it != _metaData.end(); it++)
-      _reqMap->push_back(
-          *new HTTPHeader("X-Object-Meta-" + it->first, it->second));
+        it != _metaData.end(); it++){
+      HTTPHeader metaHeader("X-Object-Meta-" + it->first, it->second);
+      _reqMap->push_back(metaHeader);
+    }
   }
 
   //Do swift transaction
@@ -240,6 +246,11 @@ SwiftResult<istream*>* Object::swiftDeleteMetadata(
       metaData.erase(it);
   }
 
+  if(existingMeta!=nullptr){
+    delete existingMeta;
+    existingMeta = nullptr;
+  }
+
   return swiftCreateMetadata(metaData, nullptr, false);
 }
 
@@ -257,16 +268,18 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
     return returnNullError<HTTPClientSession*>("SWIFT Endpoint");
 
   //Create parameter map
-  vector<HTTPHeader> *reqParamMap = new vector<HTTPHeader>();
+  vector<HTTPHeader> reqParamMap;
   //Add authentication token
   string tokenID = container->getAccount()->getToken()->getId();
-  reqParamMap->push_back(*new HTTPHeader("X-Auth-Token", tokenID));
+  HTTPHeader authHeader("X-Auth-Token", tokenID);
+  reqParamMap.push_back(authHeader);
   //Push Chuncked Encoding
-  reqParamMap->push_back(*new HTTPHeader("Transfer-Encoding", "chunked"));
+  HTTPHeader encHeader("Transfer-Encoding", "chunked");
+  reqParamMap.push_back(encHeader);
   //Add rest of request Parameters
   if (_reqMap != nullptr && _reqMap->size() > 0) {
     for (uint i = 0; i < _reqMap->size(); i++) {
-      reqParamMap->push_back(_reqMap->at(i));
+      reqParamMap.push_back(_reqMap->at(i));
       //cout<<_reqMap->at(i).getQueryValue()<<endl;
     }
   }
@@ -293,7 +306,7 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
   HTTPClientSession *httpSession = nullptr;
   try {
     /** This operation does not accept a request body. **/
-    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_PUT, reqParamMap, outputStream);
+    httpSession = doHTTPIO(uri, HTTPRequest::HTTP_PUT, &reqParamMap, outputStream);
     //Now we should increase number of calls to SWIFT API
     container->getAccount()->increaseCallCounter();
   } catch (Exception &e) {
@@ -358,10 +371,17 @@ SwiftResult<void*>* Object::swiftShowMetadata(
 
 std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData() {
   SwiftResult<void*>* metadata = this->swiftShowMetadata(nullptr, false);
-  if (metadata == nullptr)
+  if (metadata == nullptr){
+    delete metadata;
+    metadata = nullptr;
     return nullptr;
-  if (metadata->getResponse() == nullptr)
+  }
+  if (metadata->getResponse() == nullptr){
+    delete metadata;
+    metadata = nullptr;
     return nullptr;
+  }
+
   std::vector<std::pair<std::string, std::string> >* result = new std::vector<
       std::pair<std::string, std::string> >();
   NameValueCollection::ConstIterator it = metadata->getResponse()->begin();
@@ -374,6 +394,9 @@ std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData()
     }
     ++it;
   }
+
+  delete metadata;
+  metadata = nullptr;
 
   return result;
 }
