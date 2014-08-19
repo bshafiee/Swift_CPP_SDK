@@ -381,12 +381,13 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
   SwiftResult<istream*> *accountDetail = this->swiftAccountDetails(HEADER_FORMAT_APPLICATION_JSON,nullptr,_newest);
   SwiftResult<vector<Container>*> *result = new SwiftResult<vector<Container>*>();
   result->setError(accountDetail->getError());
-  result->setResponse(accountDetail->getResponse());
-  result->setSession(accountDetail->getSession());
+  result->setResponse(nullptr);
+  result->setSession(nullptr);
 
   //Check error
   if(accountDetail->getError().code != SWIFT_OK.code) {
     result->setPayload(nullptr);
+    delete accountDetail;
     return result;
   }
 
@@ -402,6 +403,7 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
         reader.getFormattedErrorMessages());
     result->setError(error);
     result->setPayload(nullptr);
+    delete accountDetail;
     return result;
   }
 
@@ -416,6 +418,7 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
 
   //Set payload
   result->setPayload(containers);
+  delete accountDetail;
   return result;
 }
 

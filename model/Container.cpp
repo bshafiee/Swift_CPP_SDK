@@ -216,12 +216,13 @@ SwiftResult<vector<Object>*>* Container::swiftGetObjects(bool _newest) {
   SwiftResult<istream*> *objectList = this->swiftListObjects(HEADER_FORMAT_APPLICATION_JSON,nullptr,_newest);
   SwiftResult<vector<Object>*> *result = new SwiftResult<vector<Object>*>();
   result->setError(objectList->getError());
-  result->setResponse(objectList->getResponse());
-  result->setSession(objectList->getSession());
+  result->setResponse(nullptr);
+  result->setSession(nullptr);
 
   //Check error
   if(objectList->getError().code != SWIFT_OK.code) {
     result->setPayload(nullptr);
+    delete objectList;
     return result;
   }
 
@@ -234,6 +235,7 @@ SwiftResult<vector<Object>*>* Container::swiftGetObjects(bool _newest) {
         reader.getFormattedErrorMessages());
     result->setError(error);
     result->setPayload(nullptr);
+    delete objectList;
     return result;
   }
 
@@ -253,6 +255,7 @@ SwiftResult<vector<Object>*>* Container::swiftGetObjects(bool _newest) {
 
   //Set payload
   result->setPayload(objects);
+  delete objectList;
   return result;
 }
 
