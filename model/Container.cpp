@@ -1,9 +1,21 @@
-/*
- * Container.cpp
- *
- *  Created on: 2014-05-28
- *      Author: Behrooz Shafiee Sarjaz
- */
+/**************************************************************************
+    This is a general SDK for OpenStack Swift API written in C++
+    Copyright (C) <2014>  <Behrooz Shafiee Sarjaz>
+    This program comes with ABSOLUTELY NO WARRANTY;
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**************************************************************************/
 
 #include "Container.h"
 #include <sstream>      // ostringstream
@@ -75,11 +87,11 @@ SwiftResult<std::istream*>* Container::swiftListObjects(
   }
 }
 
-SwiftResult<void*>* Container::swiftCreateContainer(
+SwiftResult<int*>* Container::swiftCreateContainer(
     std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (account == nullptr)
-    return returnNullError<void*>("account");
+    return returnNullError<int*>("account");
   //Path
   string path = this->name;
   /**
@@ -95,14 +107,14 @@ SwiftResult<void*>* Container::swiftCreateContainer(
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_PUT,
+  return doSwiftTransaction<int*>(this->account, path, HTTPRequest::HTTP_PUT,
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr);
 }
 
-SwiftResult<void*>* Container::swiftDeleteContainer() {
+SwiftResult<int*>* Container::swiftDeleteContainer() {
   //Check Container
   if (account == nullptr)
-    return returnNullError<void*>("account");
+    return returnNullError<int*>("account");
   //Path
   string path = this->name;
   /**
@@ -115,17 +127,17 @@ SwiftResult<void*>* Container::swiftDeleteContainer() {
   validHTTPCodes.push_back(HTTPResponse::HTTP_NO_CONTENT);
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this->account, path,
+  return doSwiftTransaction<int*>(this->account, path,
       HTTPRequest::HTTP_DELETE, nullptr, nullptr, &validHTTPCodes, nullptr, 0,
       nullptr);
 }
 
-SwiftResult<void*>* Container::swiftCreateMetadata(
+SwiftResult<int*>* Container::swiftCreateMetadata(
     std::vector<std::pair<std::string, std::string> >& _metaData,
     std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (account == nullptr)
-    return returnNullError<void*>("account");
+    return returnNullError<int*>("account");
   //Path
   string path = this->name;
   /**
@@ -152,7 +164,7 @@ SwiftResult<void*>* Container::swiftCreateMetadata(
   }
 
   //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
+  SwiftResult<int*>* result = doSwiftTransaction<int*>(this->account, path, HTTPRequest::HTTP_POST,
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr);
   if(!shouldDelete)
       return result;
@@ -162,17 +174,17 @@ SwiftResult<void*>* Container::swiftCreateMetadata(
     }
 }
 
-SwiftResult<void*>* Container::swiftUpdateMetadata(
+SwiftResult<int*>* Container::swiftUpdateMetadata(
     std::vector<std::pair<std::string, std::string> >& _metaData,
     std::vector<HTTPHeader>* _reqMap) {
   return swiftCreateMetadata(_metaData, _reqMap);
 }
 
-SwiftResult<void*>* Container::swiftDeleteMetadata(
+SwiftResult<int*>* Container::swiftDeleteMetadata(
     std::vector<std::string>& _metaDataKeys, std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (account == nullptr)
-    return returnNullError<void*>("account");
+    return returnNullError<int*>("account");
   //Path
   string path = this->name;
   /**
@@ -198,7 +210,7 @@ SwiftResult<void*>* Container::swiftDeleteMetadata(
   }
 
   //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_POST,
+  SwiftResult<int*>* result = doSwiftTransaction<int*>(this->account, path, HTTPRequest::HTTP_POST,
       nullptr, _reqMap, &validHTTPCodes, nullptr, 0, nullptr);
   if(!shouldDelete)
       return result;
@@ -242,7 +254,7 @@ SwiftResult<vector<Object>*>* Container::swiftGetObjects(bool _newest) {
   //Allocate containers
   vector<Object>*objects = new vector<Object>();
   //Successful parse
-  for(int i=0;i<root.size();i++) {
+  for(uint i=0;i<root.size();i++) {
     string name = root[i].get("name","").asString();
     long length = root[i].get("bytes",-1).asInt64();
     string content_type = root[i].get("content_type","").asString();
@@ -267,10 +279,10 @@ Account* Container::getAccount() {
   return account;
 }
 
-SwiftResult<void*>* Container::swiftShowMetadata(bool _newest) {
+SwiftResult<int*>* Container::swiftShowMetadata(bool _newest) {
   //Check Container
   if (account == nullptr)
-    return returnNullError<void*>("account");
+    return returnNullError<int*>("account");
   //Path
   string path = this->name;
   /**
@@ -288,7 +300,7 @@ SwiftResult<void*>* Container::swiftShowMetadata(bool _newest) {
   }
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(this->account, path, HTTPRequest::HTTP_HEAD,
+  return doSwiftTransaction<int*>(this->account, path, HTTPRequest::HTTP_HEAD,
       nullptr, &_reqMap, &validHTTPCodes, nullptr, 0, nullptr);
 }
 

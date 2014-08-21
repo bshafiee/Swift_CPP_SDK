@@ -1,14 +1,27 @@
-/*
- *
- *  Created on: 2014-05-28
- *      Author: Behrooz Shafiee Sarjaz
- */
+/**************************************************************************
+    This is a general SDK for OpenStack Swift API written in C++
+    Copyright (C) <2014>  <Behrooz Shafiee Sarjaz>
+    This program comes with ABSOLUTELY NO WARRANTY;
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**************************************************************************/
 
 #include "Account.h"
 #include "Container.h"
 #include "../io/HTTPIO.h"
 #include <Poco/Exception.h>
-#include <sstream>      // ostringstream
+#include <sstream>
 using namespace std;
 using namespace Poco;
 using namespace Poco::Net;
@@ -123,10 +136,6 @@ SwiftResult<Account*>* Account::authenticate(
     result->setPayload(nullptr);
     return result;
   }
-  /*Printing result for debugging purposes
-   Json::StyledWriter styledWriter;
-   cout<<styledWriter.write(root)<<endl;
-   */
   //Parsing JSON Successful
   //Everything is inside "access"
   root = root["access"];
@@ -302,7 +311,7 @@ SwiftResult<istream*>* Account::swiftAccountDetails(HTTPHeader &_formatHeader,
 
 }
 
-SwiftResult<void*>* Account::swiftCreateMetadata(
+SwiftResult<int*>* Account::swiftCreateMetadata(
     vector<pair<string, string> >& _metaData, vector<HTTPHeader>* _reqMap) {
   /**
    * 204:
@@ -326,7 +335,7 @@ SwiftResult<void*>* Account::swiftCreateMetadata(
 
   //Do swift transaction
   string path = "";
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(this, path,
+  SwiftResult<int*>* result = doSwiftTransaction<int*>(this, path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
         nullptr);
   if(!shouldDelete)
@@ -337,12 +346,12 @@ SwiftResult<void*>* Account::swiftCreateMetadata(
   }
 }
 
-SwiftResult<void*>* Account::swiftUpdateMetadata(
+SwiftResult<int*>* Account::swiftUpdateMetadata(
     vector<pair<string, string> >& _metaData, vector<HTTPHeader>* _reqMap) {
   return swiftCreateMetadata(_metaData, _reqMap);
 }
 
-SwiftResult<void*>* Account::swiftDeleteMetadata(
+SwiftResult<int*>* Account::swiftDeleteMetadata(
     std::vector<string> &_metaDataKeys, vector<HTTPHeader>* _reqMap) {
   /**
    * 204:
@@ -366,7 +375,7 @@ SwiftResult<void*>* Account::swiftDeleteMetadata(
 
   //Do swift transaction
   string path = "";
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(this, path,
+  SwiftResult<int*>* result = doSwiftTransaction<int*>(this, path,
       HTTPRequest::HTTP_POST, nullptr, _reqMap, &validHTTPCodes, nullptr, 0,
         nullptr);
   if(!shouldDelete)
@@ -394,9 +403,6 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
   //Parse JSON
   Json::Value root;   // will contains the root value after parsing.
   Json::Reader reader;
-  //cout<<endl<<"INJA::"<<flush(cout)<<endl<<"EOF?"<<accountDetail->getPayload()->eof()<<endl;;
-  //StreamCopier::copyStream(*accountDetail->getPayload(),cout);
-  //cout<<endl<<"INJA2::"<<flush(cout)<<endl;;
   bool parsingSuccessful = reader.parse(*accountDetail->getPayload(), root, false);
   if (!parsingSuccessful) {
     SwiftError error(SwiftError::SWIFT_JSON_PARSE_ERROR,
@@ -410,7 +416,7 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
   //Allocate containers
   vector<Container>*containers = new vector<Container>();
   //Successful parse
-  for(int i=0;i<root.size();i++) {
+  for(uint i=0;i<root.size();i++) {
     string name = root[i].get("name","").asString();
     Container container(this,name);
     containers->push_back(container);
@@ -422,7 +428,7 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
   return result;
 }
 
-SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
+SwiftResult<int*>* Account::swiftShowMetadata(bool _newest) {
   /**
    * 204:
    *  Success. The response body is empty.
@@ -436,7 +442,7 @@ SwiftResult<void*>* Account::swiftShowMetadata(bool _newest) {
 
   //Do swift transaction
   string path = "";
-  return doSwiftTransaction<void*>(this, path,
+  return doSwiftTransaction<int*>(this, path,
       HTTPRequest::HTTP_HEAD, nullptr, &_reqMap, &validHTTPCodes, nullptr, 0,
         nullptr);
 }

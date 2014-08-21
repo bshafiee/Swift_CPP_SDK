@@ -1,9 +1,21 @@
-/*
- * Object.h
- *
- *  Created on: 2014-05-28
- *      Author: Behrooz Shafiee Sarjaz
- */
+/**************************************************************************
+    This is a general SDK for OpenStack Swift API written in C++
+    Copyright (C) <2014>  <Behrooz Shafiee Sarjaz>
+    This program comes with ABSOLUTELY NO WARRANTY;
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**************************************************************************/
 
 #ifndef OBJECT_H_
 #define OBJECT_H_
@@ -46,7 +58,7 @@ public:
       std::vector<HTTPHeader> *_uriParams = nullptr,
       std::vector<HTTPHeader> *_reqMap = nullptr);
 
-  SwiftResult<void*>* swiftCreateReplaceObject(const char* _data, ulong _size,
+  SwiftResult<int*>* swiftCreateReplaceObject(const char* _data, ulong _size,
       bool _calculateETag = true, std::vector<HTTPHeader> *_uriParams = nullptr,
       std::vector<HTTPHeader> *_reqMap = nullptr);
 
@@ -61,7 +73,7 @@ public:
       std::ostream* &ouputStream, std::vector<HTTPHeader> *_uriParams = nullptr,
       std::vector<HTTPHeader> *_reqMap = nullptr);
 
-  SwiftResult<void*>* swiftCopyObject(const std::string &_dstObjectName,
+  SwiftResult<int*>* swiftCopyObject(const std::string &_dstObjectName,
       Container &_dstContainer, std::vector<HTTPHeader> *_reqMap = nullptr);
 
   SwiftResult<std::istream*>* swiftDeleteObject(
@@ -79,7 +91,7 @@ public:
   SwiftResult<std::istream*>* swiftDeleteMetadata(
       std::vector<std::string> &_metaDataKeys);
 
-  SwiftResult<void*>* swiftShowMetadata(std::vector<HTTPHeader>* _uriParams =
+  SwiftResult<int*>* swiftShowMetadata(std::vector<HTTPHeader>* _uriParams =
       nullptr, bool _newest = false);
 };
 

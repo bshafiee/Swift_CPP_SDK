@@ -1,5 +1,5 @@
-#CXXFLAGS =	-O3 -g -Wall -fmessage-length=0 -std=c++11
-CXXFLAGS = -g -Wall -fmessage-length=0 -std=c++11
+CXXFLAGS =	-O3 -Wall -fmessage-length=0 -std=c++11
+#CXXFLAGS = -ggdb -g -Wall -fmessage-length=0 -std=c++11
 CFLAGS = -Wno-address -Wno-char-subscripts # -Wno-sign-compare
 
 SWIFT=$(wildcard interface/*.cpp io/*.cpp utils/jsoncpp/*.cpp model/*.cpp header/*.cpp)
@@ -28,7 +28,7 @@ LIBS =-lPocoUtild -lPocoUtil -lPocoXML -lPocoNet -lPocoNetd -lPocoFoundation -lP
 TARGET =	SwiftSDK
 LIBSWIFT = libSwift.a
 
-CXX=clang++
+#CXX=clang++
 all: $(LIBSWIFT) $(TARGET)
 
 $(LIBSWIFT): $(CXXOBJS)

@@ -1,12 +1,24 @@
-/*
- * HTTPIO.cpp
- *
- *  Created on: 2014-05-27
- *      Author: Behrooz Shafiee Sarjaz
- */
+/**************************************************************************
+    This is a general SDK for OpenStack Swift API written in C++
+    Copyright (C) <2014>  <Behrooz Shafiee Sarjaz>
+    This program comes with ABSOLUTELY NO WARRANTY;
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**************************************************************************/
 
 #include "HTTPIO.h"
-#include <sstream>      // ostringstream
+#include <sstream>
 #include <mutex>
 
 namespace Swift {
@@ -31,7 +43,6 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
       it++;
     }
   }
-  //cout<<endl<<"Request:"<<endl;request.write(cout);cout<<endl;
   session->sendRequest(request);
   return session;
 }
@@ -110,15 +121,12 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
 
   //Ouput stream
   outputStream = &session->sendRequest(request);
-  //Copy input stream to the output stream
-  //StreamCopier::copyStream(inputStream, ostream);
-  //ostream << inputStream;
 
   return session;
 }
 
 /** Template instantiation for common used types **/
-template SwiftResult<void*>* returnNullError<void*>(const string &whatsNull);
+template SwiftResult<int*>* returnNullError<int*>(const string &whatsNull);
 template SwiftResult<istream*>* returnNullError<istream*>(const string &whatsNull);
 template SwiftResult<HTTPClientSession*>* returnNullError<HTTPClientSession*>(const string &whatsNull);
 
@@ -141,7 +149,7 @@ SwiftResult<istream*>* doSwiftTransaction<istream*>(Account *_account,
     std::string *contentType);
 
 template
-SwiftResult<void*>* doSwiftTransaction<void*>(Account *_account,
+SwiftResult<int*>* doSwiftTransaction<int*>(Account *_account,
     std::string &_uriPath, const std::string &_method,
     std::vector<HTTPHeader>* _uriParams, std::vector<HTTPHeader>* _reqMap,
     std::vector<int> *_httpValidCodes, const char *bodyReqBuffer, ulong size,
@@ -171,7 +179,6 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   if (_reqMap != nullptr && _reqMap->size() > 0) {
     for (uint i = 0; i < _reqMap->size(); i++) {
       reqParamMap.push_back(_reqMap->at(i));
-      //cout<<_reqMap->at(i).getQueryValue()<<endl;
     }
   }
 
@@ -191,21 +198,12 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
       queryStream << _uriParams->at(i).getQueryValue();
     }
     uri.setQuery(queryStream.str());
-    //cout<<uri.toString()<<endl;;
   }
 
   //Creating HTTP Session
   HTTPResponse *httpResponse = new HTTPResponse();
   HTTPClientSession *httpSession = nullptr;
   istream* resultStream = nullptr;
-  //istream* resultStream;
-  //HTTPClientSession *httpSession = nullptr;
-  /*if(httpSession != nullptr) {
-    httpSession->reset();
-    delete httpSession;
-    httpSession = nullptr;
-    resultStream = nullptr;
-  }*/
 
   try {
     /** This operation does not accept a request body. **/
@@ -259,7 +257,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   result->setError(SWIFT_OK);
   result->setSession(httpSession);
   result->setResponse(httpResponse);
-  result->setPayload(resultStream);
+  result->setPayload((T)resultStream);
   //Cleanup
   return result;
 }

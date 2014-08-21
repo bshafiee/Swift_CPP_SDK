@@ -1,12 +1,24 @@
-/*
- * Object.cpp
- *
- *  Created on: 2014-05-28
- *      Author: Behrooz Shafiee Sarjaz
- */
+/**************************************************************************
+    This is a general SDK for OpenStack Swift API written in C++
+    Copyright (C) <2014>  <Behrooz Shafiee Sarjaz>
+    This program comes with ABSOLUTELY NO WARRANTY;
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**************************************************************************/
 
 #include "Object.h"
-#include <sstream>      // ostringstream
+#include <sstream>
 #include "../io/HTTPIO.h"
 #include <Poco/MD5Engine.h>
 
@@ -50,12 +62,12 @@ SwiftResult<istream*>* Object::swiftGetObjectContent(
       nullptr);
 }
 
-SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
+SwiftResult<int*>* Object::swiftCreateReplaceObject(const char* _data,
     ulong _size, bool _calculateETag, std::vector<HTTPHeader>* _uriParams,
     std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
-    return returnNullError<void*>("container");
+    return returnNullError<int*>("container");
   //Path
   string path = container->getName() + "/" + name;
   /**
@@ -88,7 +100,7 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
   }
 
   //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(
+  SwiftResult<int*>* result = doSwiftTransaction<int*>(
       container->getAccount(), path, HTTPRequest::HTTP_PUT, _uriParams, _reqMap,
       &validHTTPCodes, _data, _size, nullptr);
   if (!shouldDelete)
@@ -99,11 +111,11 @@ SwiftResult<void*>* Object::swiftCreateReplaceObject(const char* _data,
   }
 }
 
-SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
+SwiftResult<int*>* Object::swiftCopyObject(const std::string& _dstObjectName,
     Container& _dstContainer, std::vector<HTTPHeader>* _reqMap) {
   //Check Container
   if (container == nullptr)
-    return returnNullError<void*>("container");
+    return returnNullError<int*>("container");
   //Path
   string path = container->getName() + "/" + name;
   /**
@@ -124,7 +136,7 @@ SwiftResult<void*>* Object::swiftCopyObject(const std::string& _dstObjectName,
   _reqMap->push_back(destHeader);
 
   //Do swift transaction
-  SwiftResult<void*>* result = doSwiftTransaction<void*>(
+  SwiftResult<int*>* result = doSwiftTransaction<int*>(
       container->getAccount(), path, "COPY", nullptr, _reqMap, &validHTTPCodes,
       nullptr, 0, nullptr);
   if (!shouldDelete)
@@ -280,7 +292,6 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
   if (_reqMap != nullptr && _reqMap->size() > 0) {
     for (uint i = 0; i < _reqMap->size(); i++) {
       reqParamMap.push_back(_reqMap->at(i));
-      //cout<<_reqMap->at(i).getQueryValue()<<endl;
     }
   }
 
@@ -292,7 +303,6 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
   if (_uriParams != nullptr && _uriParams->size() > 0) {
     //Create appropriate URI
     ostringstream queryStream;
-    //queryStream << "?";
     for (uint i = 0; i < _uriParams->size(); i++) {
       if (i > 0)
         queryStream << ",";
@@ -329,11 +339,11 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
   return result;
 }
 
-SwiftResult<void*>* Object::swiftShowMetadata(
+SwiftResult<int*>* Object::swiftShowMetadata(
     std::vector<HTTPHeader>* _uriParams, bool _newest) {
   //Check Container
   if (container == nullptr)
-    return returnNullError<void*>("container");
+    return returnNullError<int*>("container");
   //Path
   string path = container->getName() + "/" + name;
   /**
@@ -364,13 +374,13 @@ SwiftResult<void*>* Object::swiftShowMetadata(
     reqHeaders.push_back(*new HTTPHeader("X-Newest", "True"));
 
   //Do swift transaction
-  return doSwiftTransaction<void*>(container->getAccount(), path,
+  return doSwiftTransaction<int*>(container->getAccount(), path,
       HTTPRequest::HTTP_HEAD, _uriParams, &reqHeaders, &validHTTPCodes, nullptr,
       0, nullptr);
 }
 
 std::vector<std::pair<std::string, std::string> >* Object::getExistingMetaData() {
-  SwiftResult<void*>* metadata = this->swiftShowMetadata(nullptr, false);
+  SwiftResult<int*>* metadata = this->swiftShowMetadata(nullptr, false);
   if (metadata == nullptr){
     delete metadata;
     metadata = nullptr;

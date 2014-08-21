@@ -1,17 +1,27 @@
-#include <Poco/Net/SocketAddress.h>
-#include <Poco/Net/StreamSocket.h>
-#include <Poco/Net/SocketStream.h>
-#include <Poco/Net/HTTPClientSession.h>
-#include <Poco/Net/HTTPRequest.h>
-#include <Poco/Net/HTTPResponse.h>
-#include <Poco/StreamCopier.h>
-#include <json/json.h>
+/**************************************************************************
+    This is a general SDK for OpenStack Swift API written in C++
+    Copyright (C) <2014>  <Behrooz Shafiee Sarjaz>
+    This program comes with ABSOLUTELY NO WARRANTY;
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**************************************************************************/
 #include <iostream>
 #include "io/HTTPIO.h"
 #include "model/Account.h"
 #include "model/Container.h"
 #include "model/Object.h"
-#include <sstream>      // ostringstream
+#include <sstream>
 #include <cstring>
 #include <climits>
 
@@ -51,7 +61,7 @@ int main(int argc, char** argv) {
   vector<pair<string, string> > accountMetaData;
   accountMetaData.push_back(make_pair("Key 1", "Value 1"));
   accountMetaData.push_back(make_pair("Key 2", "Value 2"));
-  SwiftResult<void*>* accountMetaDataRes =
+  SwiftResult<int*>* accountMetaDataRes =
       authenticateResult->getPayload()->swiftCreateMetadata(accountMetaData);
   accountMetaDataRes->getResponse()->write(cout);
   cout << endl << endl;
@@ -94,7 +104,7 @@ int main(int argc, char** argv) {
   Container container(authenticateResult->getPayload(), "Container2");
 
   //Create container
-  SwiftResult<void*>* containerRes = container.swiftCreateContainer();
+  SwiftResult<int*>* containerRes = container.swiftCreateContainer();
   containerRes->getResponse()->write(cout);
   cout << endl << endl;
   delete containerRes;
@@ -103,7 +113,7 @@ int main(int argc, char** argv) {
   Container container2(authenticateResult->getPayload(), "Container2");
   SwiftResult<vector<Object>*>* objects = container2.swiftGetObjects(true);
   if(objects->getError().code == SwiftError::SWIFT_OK)
-    for (int i = 0; i < objects->getPayload()->size(); i++) {
+    for (uint i = 0; i < objects->getPayload()->size(); i++) {
       cout << objects->getPayload()->at(i).getName() << "\tLength:"
           << objects->getPayload()->at(i).getLength() << "\tType:"
           << objects->getPayload()->at(i).getContentType() << "\tHash:"
@@ -119,7 +129,7 @@ int main(int argc, char** argv) {
   delete containerRes;
 
   //Create Again
-  SwiftResult<void*>*createRes = container.swiftCreateContainer();
+  SwiftResult<int*>*createRes = container.swiftCreateContainer();
   delete createRes;
 
   //Get objects of an existing container
@@ -164,7 +174,7 @@ int main(int argc, char** argv) {
   //Object Test case
   Object object(&container, "Object2");
   string data = "Hello crappy World :)";
-  SwiftResult<void*> *objResult = object.swiftCreateReplaceObject(data.c_str(),
+  SwiftResult<int*> *objResult = object.swiftCreateReplaceObject(data.c_str(),
       data.length(), true);
   objResult->getResponse()->write(cout);
   cout << endl << endl;
@@ -206,7 +216,7 @@ int main(int argc, char** argv) {
   delete readResult;
 
   //Copy Object
-  SwiftResult<void*>* copyResult = chucnkedObject.swiftCopyObject(
+  SwiftResult<int*>* copyResult = chucnkedObject.swiftCopyObject(
       "CopyStreamObject", container);
   copyResult->getResponse()->write(cout);
   cout << endl << endl;
@@ -233,7 +243,7 @@ int main(int argc, char** argv) {
 
   //Object show Metadata
   cout << endl << endl << "MetaDataResult:" << endl;
-  SwiftResult<void*>* metaDataShowResult = chucnkedObject.swiftShowMetadata();
+  SwiftResult<int*>* metaDataShowResult = chucnkedObject.swiftShowMetadata();
   metaDataShowResult->getResponse()->write(cout);
   cout << endl << endl;
   delete metaDataShowResult;
