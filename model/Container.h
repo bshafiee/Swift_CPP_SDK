@@ -34,27 +34,76 @@ public:
   virtual ~Container();
 
   /** API Functions **/
+  /**
+   * Lists the objects under this container
+   * @return
+   *  A vector of Objects under this container
+   */
   SwiftResult<std::vector<Object>*>* swiftGetObjects(bool _newest = false);
 
+  /**
+   * Similar to swiftGetObjects; however, only returns the name
+   * of existing objects in this account.
+   * @return
+   *  A stream containing names of objects under this account
+   *  in the specified format(json/xml)
+   */
   SwiftResult<std::istream*>* swiftListObjects(HTTPHeader &_formatHeader = HEADER_FORMAT_APPLICATION_JSON,
       std::vector<HTTPHeader> *_uriParam = nullptr, bool _newest = false);
 
+  /**
+   * Creates this container on the Swift server
+   * @return
+   *  Noting.
+   */
   SwiftResult<int*>* swiftCreateContainer(std::vector<HTTPHeader> *_reqMap=nullptr);
 
+  /**
+   * Deletes this container from Swift server
+   * @return
+   *  Noting.
+   */
   SwiftResult<int*>* swiftDeleteContainer();
 
+  /**
+   * Adds metadata to this Container
+   * @return
+   *  Nothing
+   * _metaData
+   *  A vector of string pairs (key,value)
+   */
   SwiftResult<int*>* swiftCreateMetadata(
       std::vector<std::pair<std::string, std::string>> &_metaData,
       std::vector<HTTPHeader> *_reqMap=nullptr);
 
+  /**
+   * Updates existing metadata for this Container
+   * @return
+   *  Nothing
+   * _metaData
+   *  A vector of string pairs (key,value)
+   */
   SwiftResult<int*>* swiftUpdateMetadata(
       std::vector<std::pair<std::string, std::string>> &_metaData,
       std::vector<HTTPHeader> *_reqMap=nullptr);
 
+  /**
+   * Removes specified metadata (with key) from this container
+   * @return
+   *  Nothing
+   * _metaDataKeys
+   *  A vector containing keys of metadata which should be removed.
+   */
   SwiftResult<int*>* swiftDeleteMetadata(
       std::vector<std::string> &_metaDataKeys,
       std::vector<HTTPHeader> *_reqMap=nullptr);
 
+  /**
+   * Gets the existing metadata for this container
+   * @return
+   *  Nothing. The payload is nullptr; however, the returned metadata are
+   *  part of httpresponse. For example, getResponse()->write(cout);
+   */
   SwiftResult<int*>* swiftShowMetadata(bool _newest = false);
 
   Account* getAccount();

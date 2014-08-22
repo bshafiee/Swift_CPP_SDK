@@ -172,26 +172,73 @@ public:
   /** API Functions **/
 
   /**
-   * Get All Containers
+   * Returns all the containers under this account
+   * @return
+   *  a vector of Containers
+   * _newest
+   *  If set to True, Object Storage queries all replicas
+   *  to return the most recent one. If you omit this header,
+   *  Object Storage responds faster after it finds one valid
+   *  replica. Because setting this header to True is more
+   *  expensive for the back end, use it only when it is
+   *  absolutely needed.
    */
   SwiftResult<std::vector<Container>*>* swiftGetContainers(bool _newest = false);
 
+  /**
+   * Shows details for this account
+   * @return
+   *  An stream containing details of this account
+   * _formatHeader
+   *  Specifies format of returned information
+   * _reqMap
+   *  You can add additional query parameters to this request. Please refer
+   *  the Swift API documentations to see available query parameters.
+   *  http://docs.openstack.org/api/openstack-object-storage/1.0/content/index.html
+   */
   SwiftResult<std::istream*>* swiftAccountDetails(HTTPHeader &_formatHeader =
       HEADER_FORMAT_APPLICATION_JSON,
       std::vector<HTTPHeader> *_reqMap = nullptr, bool _newest = false);
 
+  /**
+   * Adds metadata to this account
+   * @return
+   *  Nothing
+   * _metaData
+   *  A vector of string pairs (key,value)
+   */
   SwiftResult<int*>* swiftCreateMetadata(
       std::vector<std::pair<std::string, std::string>> &_metaData,
       std::vector<HTTPHeader> *_reqMap = nullptr);
 
+  /**
+   * Updates existing metadata for this account
+   * @return
+   *  Nothing
+   * _metaData
+   *  A vector of string pairs (key,value)
+   */
   SwiftResult<int*>* swiftUpdateMetadata(
       std::vector<std::pair<std::string, std::string>> &_metaData,
       std::vector<HTTPHeader> *_reqMap = nullptr);
 
+  /**
+   * Removes specified metadata (with key) from this account
+   * @return
+   *  Nothing
+   * _metaDataKeys
+   *  A vector containing keys of metadata which should be removed.
+   */
   SwiftResult<int*>* swiftDeleteMetadata(
       std::vector<std::string> &_metaDataKeys,
       std::vector<HTTPHeader> *_reqMap = nullptr);
 
+  /**
+   * Gets the existing metadata for this account
+   * @return
+   *  Nothing. The payload is nullptr; however, the returned metadata are
+   *  part of httpresponse. For example, getResponse()->write(cout);
+   */
   SwiftResult<int*>* swiftShowMetadata(bool _newest = false);
 };
 
