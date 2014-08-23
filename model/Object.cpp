@@ -298,6 +298,9 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
   //Path
   string path = container->getName() + "/" + name;
   URI uri(swiftEndpoint->getPublicUrl());
+  string encoded;
+  URI::encode(path,"",encoded);
+  path = encoded;
   uri.setPath(uri.getPath() + "/" + path);
 
   if (_uriParams != nullptr && _uriParams->size() > 0) {

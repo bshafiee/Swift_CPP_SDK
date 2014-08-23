@@ -185,6 +185,9 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
   }
 
   URI uri(swiftEndpoint->getPublicUrl());
+  string encoded;
+  URI::encode(_uriPath,"",encoded);
+  _uriPath = encoded;
   if (uri.getPath().size() > 0)
     uri.setPath(uri.getPath() + "/" + _uriPath);
   else

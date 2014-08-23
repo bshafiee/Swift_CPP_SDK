@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
   cout << endl << endl;
   delete objReadResult;
 
-  Object chucnkedObject(&container, "ChunkedObject");
+  Object chucnkedObject(&container, "output-@#$%");
   ostream *outStream = nullptr;
   SwiftResult<HTTPClientSession*> *chunkedResult =
       chucnkedObject.swiftCreateReplaceObject(outStream);
