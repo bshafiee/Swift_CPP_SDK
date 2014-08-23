@@ -98,4 +98,19 @@ void Token::setTenant(Tenant* tenant) {
 	this->tenant = tenant;
 }
 
+Token& Token::operator =(const Token& other) {
+  expires = other.expires;
+  id = other.id;
+  issued_at = other.issued_at;
+  if(tenant!=nullptr && other.tenant!=nullptr) {
+    tenant->setDescription(other.tenant->getDescription());
+    tenant->setId(other.tenant->getId());
+    tenant->setName(other.tenant->getName());
+    tenant->setEnabled(other.tenant->isEnabled());
+  }
+  else
+    tenant = other.tenant;
+  return *this;
+}
+
 } /* namespace Swift */

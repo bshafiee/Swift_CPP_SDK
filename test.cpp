@@ -49,6 +49,8 @@ int main(int argc, char** argv) {
   cout << "Account Test case:\n" << authenticateResult->getPayload()->toString()
       << endl << endl;
 
+  authenticateResult->getPayload()->setToken();
+
   //Get account details
   SwiftResult<istream*>* accountDetails =
       authenticateResult->getPayload()->swiftAccountDetails(

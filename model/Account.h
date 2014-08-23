@@ -106,6 +106,8 @@ public:
   static SwiftResult<Account*>* authenticate(
       const AuthenticationInfo &_authInfo, bool _allowReauthenticate = true);
 
+  bool reAuthenticate();
+
   /**
    * The number of bytes stored by the StoredObjects in all Containers in the Account.
    * @return number of bytes

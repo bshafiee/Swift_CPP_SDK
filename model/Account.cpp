@@ -144,6 +144,7 @@ SwiftResult<Account*>* Account::authenticate(
   Json::Value userRoot = root.get("user", Json::nullValue);
   instance->userID = userRoot.get("id", "").asString();
   instance->name = userRoot.get("name", "").asString();
+  instance->authInfo = _authInfo;
   instance->authInfo.username = userRoot.get("username", "").asString();
   //Roles
   Json::Value roles = userRoot.get("roles", Json::nullValue);
@@ -448,3 +449,22 @@ SwiftResult<int*>* Account::swiftShowMetadata(bool _newest) {
 }
 
 } /* namespace Swift */
+
+bool Swift::Account::reAuthenticate() {
+  //Use authenticate function
+  SwiftResult<Account*> *tempAccount = authenticate(authInfo,true);
+
+  //Check error
+  if(tempAccount->getError().code != SWIFT_OK.code) {
+    delete tempAccount;
+    return false;
+  }
+
+  //Parse User Info
+  this->userID = tempAccount->getPayload()->userID;
+  //Parse Token
+  *this->token = *tempAccount->getPayload()->token;
+
+  delete tempAccount;
+  return true;
+}

@@ -27,7 +27,7 @@ using namespace std;
 using namespace Poco::Net;
 using namespace Poco;
 
-mutex transactionMutex;
+recursive_mutex transactionMutex;
 
 Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     const std::string& type, std::vector<HTTPHeader>* params) {
@@ -39,7 +39,9 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
   if (params != nullptr && params->size() > 0) {
     vector<HTTPHeader>::iterator it = params->begin();
     while (it != params->end()) {
-      request.add(it->getKey(), it->getValue());
+      string key = it->getKey();
+      string value = it->getValue();
+      request.add(key, value);
       it++;
     }
   }
@@ -161,7 +163,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     std::vector<HTTPHeader>* _reqMap, std::vector<int> *_httpValidCodes,
     const char *bodyReqBuffer, ulong size, std::string *contentType) {
   //Start locking
-  lock_guard<mutex> guard(transactionMutex);
+  lock_guard<recursive_mutex> guard(transactionMutex);
   //Start of function
   if (_account == nullptr)
     return returnNullError<T>("account");
@@ -243,8 +245,19 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     }
 
   if (!valid) {
+    httpResponse->write(cout);
+    if(httpResponse->getStatus() == HTTPResponse::HTTP_UNAUTHORIZED) {
+      if(_account->reAuthenticate()) {
+        delete httpSession;httpSession = nullptr;
+        delete httpResponse;httpResponse = nullptr;
+        return doSwiftTransaction<T>(_account, _uriPath,_method, _uriParams,
+            _reqMap, _httpValidCodes, bodyReqBuffer, size, contentType);
+      }
+    }
     SwiftResult<T> *result = new SwiftResult<T>();
-    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, httpResponse->getReason());
+    string errorText = "Code:";
+    errorText+= httpResponse->getStatus()+"\tReason:"+httpResponse->getReason();
+    SwiftError error(SwiftError::SWIFT_HTTP_ERROR, errorText);
     result->setError(error);
     result->setSession(httpSession);
     result->setResponse(httpResponse);

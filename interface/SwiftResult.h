@@ -60,7 +60,7 @@ public:
     }
   }
 
-  const SwiftError& getError() const {
+  SwiftError getError() const {
     return error;
   }
 

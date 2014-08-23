@@ -29,7 +29,7 @@ struct SwiftError {
   int code;
   std::string msg;
   SwiftError(int _code, std::string _msg);
-  std::string toString();
+  const std::string toString();
   /** List of Errors **/
   static const int SWIFT_OK = 0; //Successful
   static const int SWIFT_FAIL = -1; //Unsuccessful

@@ -27,7 +27,7 @@ SwiftError::SwiftError(int _code, std::string _msg) {
   msg = _msg;
 }
 
-std::string SwiftError::toString() {
+const std::string SwiftError::toString() {
   int len = strlen(msg.c_str()) + 20;
   char *temp = new char[len];
   snprintf(temp, len, "Error %d: %s", code, msg.c_str());

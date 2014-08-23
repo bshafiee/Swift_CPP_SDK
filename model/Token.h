@@ -47,6 +47,7 @@ public:
   void setIssuedAt(const std::string& issuedAt);
   Tenant* getTenant() const;
   void setTenant(Tenant* tenant);
+  Token & operator=(const Token &other);
 };
 
 } /* namespace Swift */
