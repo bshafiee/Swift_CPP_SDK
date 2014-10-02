@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
   delete containerRes;
 
   //Object Test case
-  Object object(&container, "Object2");
+  Object object(&container, "Object2 with space");
   string data = "Hello crappy World :)";
   SwiftResult<int*> *objResult = object.swiftCreateReplaceObject(data.c_str(),
       data.length(), true);

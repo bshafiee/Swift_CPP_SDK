@@ -54,7 +54,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     const std::string& reqBody, const std::string& contentType) {
   HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
       uri.getPort());
-  HTTPRequest request(type, uri.getPath());
+  HTTPRequest request(type, uri.getPathAndQuery());
   //Set Content Type
   request.setContentLength(reqBody.size());
   request.setContentType(contentType);
@@ -81,7 +81,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     const char* reqBody, ulong size, const std::string& contentType) {
   HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
       uri.getPort());
-  HTTPRequest request(type, uri.getPath());
+  HTTPRequest request(type, uri.getPathAndQuery());
   //Set Content size
   request.setContentLength(size);
   //Content Type
@@ -110,7 +110,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
     std::ostream* &outputStream) {
   HTTPClientSession *session = new HTTPClientSession(uri.getHost(),
       uri.getPort());
-  HTTPRequest request(type, uri.getPath());
+  HTTPRequest request(type, uri.getPathAndQuery());
 
   //Add params
   if (params != nullptr && params->size() > 0) {
