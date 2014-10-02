@@ -59,13 +59,19 @@ int main(int argc, char** argv) {
 
   //Create account metadata
   vector<pair<string, string> > accountMetaData;
-  accountMetaData.push_back(make_pair("Key 1", "Value 1"));
-  accountMetaData.push_back(make_pair("Key 2", "Value 2"));
+  accountMetaData.push_back(make_pair("Key1", "Value1"));
+  //accountMetaData.push_back(make_pair("Key 2", "Value 2"));
   SwiftResult<int*>* accountMetaDataRes =
       authenticateResult->getPayload()->swiftCreateMetadata(accountMetaData);
   accountMetaDataRes->getResponse()->write(cout);
   cout << endl << endl;
   delete accountMetaDataRes;
+
+  //Show account metadata
+	accountMetaDataRes = authenticateResult->getPayload()->swiftShowMetadata();
+	accountMetaDataRes->getResponse()->write(cout);
+	cout << endl << endl;
+	delete accountMetaDataRes;
 
   //delete account metadata
   vector<string> accountMetaDataDeleteKeys;

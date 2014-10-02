@@ -226,6 +226,8 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     _account->increaseCallCounter();
     if (std::is_same<T, std::istream*>::value)
       resultStream = &httpSession->receiveResponse(*httpResponse);
+    else
+    	httpSession->receiveResponse(*httpResponse);
   } catch (Exception &e) {
     SwiftResult<T> *result = new SwiftResult<T>();
     SwiftError error(SwiftError::SWIFT_EXCEPTION, e.displayText());
@@ -248,7 +250,10 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     }
 
   if (!valid) {
+  	cout<<"Invalid Return code:";
     httpResponse->write(cout);
+    if(httpResponse->getStatus() == 200)
+    	cerr<<"bullshit"<<endl;
     if(httpResponse->getStatus() == HTTPResponse::HTTP_UNAUTHORIZED) {
       if(_account->reAuthenticate()) {
         delete httpSession;httpSession = nullptr;

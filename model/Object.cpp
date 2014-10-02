@@ -124,7 +124,7 @@ SwiftResult<int*>* Object::swiftCopyObject(const std::string& _dstObjectName,
    *  Normal response code
    */
   vector<int> validHTTPCodes;
-  validHTTPCodes.push_back(HTTPResponse::HTTP_OK);
+  validHTTPCodes.push_back(HTTPResponse::HTTP_CREATED);
 
   //Add Destination token
   bool shouldDelete = false;
@@ -312,7 +312,7 @@ SwiftResult<HTTPClientSession*>* Object::swiftCreateReplaceObject(std::ostream* 
       queryStream << _uriParams->at(i).getQueryValue();
     }
     uri.setQuery(queryStream.str());
-    cout << uri.toString() << endl;
+    //cout << uri.toString() << endl;
   }
 
   //Creating HTTP Session

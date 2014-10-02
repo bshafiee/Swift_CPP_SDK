@@ -101,6 +101,8 @@ SwiftResult<int*>* Container::swiftCreateContainer(
    *
    * 204:
    *   Success??
+   *
+   * 202: error in case already exist!
    */
   vector<int> validHTTPCodes;
   validHTTPCodes.push_back(HTTPResponse::HTTP_CREATED);
