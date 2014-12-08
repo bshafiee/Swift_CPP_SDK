@@ -14,12 +14,12 @@ TESTOBJS=$(TESTSOURCES:%.cpp=%.o)
 #COBJS=$(CSOURCES:%.c=%.o)
 
 #Includes
-LFLAGS=-Iutils/poco/include -Iutils/jsoncpp -Iheader -Iinterface -Iio -Imodel
+LFLAGS=-Iutils/jsoncpp -Iheader -Iinterface -Iio -Imodel
 CXXFLAGS+= $(LFLAGS)
 
 #Libraries
 #LD = -static -LUtils/poco/lib
-LD = -Lutils/poco/lib
+LD =
 CXXFLAGS+=$(LD)
 
 LIBS =-lPocoUtild -lPocoUtil -lPocoXML -lPocoNet -lPocoNetd -lPocoFoundation -lPocoXMLd -lPocoFoundationd -lpthread
@@ -37,7 +37,6 @@ $(LIBSWIFT): $(CXXOBJS)
 	mkdir -p build/libSwift/lib
 	mv -f $(LIBSWIFT) build/libSwift/lib
 	cp -rf $(LIBSWIFTHEADERS) build/libSwift/include/swift
-	cp -rf utils/poco build
 	mkdir -p build/json
 	cp -rf utils/jsoncpp/json build/json
 
