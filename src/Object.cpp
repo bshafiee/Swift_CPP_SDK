@@ -19,7 +19,7 @@
 
 #include "Object.h"
 #include <sstream>
-#include "../io/HTTPIO.h"
+#include "HTTPIO.h"
 #include <Poco/MD5Engine.h>
 
 using namespace std;

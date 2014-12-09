@@ -19,7 +19,7 @@
 
 #include "Container.h"
 #include <sstream>      // ostringstream
-#include "../io/HTTPIO.h"
+#include "HTTPIO.h"
 #include "Object.h"
 
 using namespace std;

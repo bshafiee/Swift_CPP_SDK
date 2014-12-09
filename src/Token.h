@@ -16,39 +16,39 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
-
-#ifndef ENDPOINT_H_
-#define ENDPOINT_H_
+#ifndef TOKEN_H_
+#define TOKEN_H_
 
 #include <iostream>
-#include <json/json.h>
+#include "Tenant.h"
+#include "json.h"
 
 namespace Swift {
 
-class Endpoint {
-  std::string adminURL;
+class Token {
+private:
+  std::string expires;
   std::string id;
-  std::string internalURL;
-  std::string publicURL;
-  std::string region;
+  std::string issued_at;
+  Tenant *tenant;
 
 public:
-  Endpoint();
-  virtual ~Endpoint();
-  static Endpoint* fromJSON(const Json::Value &val);
-  static Json::Value* toJSON(const Endpoint& instance);
+  Token();
+  Token(const std::string &_expires,const std::string &id,const std::string &issued_at,Tenant *tenant);
+  virtual ~Token();
+  static Token* fromJSON(const Json::Value &val);
+  static Json::Value* toJSON(const Token& instance);
   //Getter Setters
-  const std::string& getAdminUrl() const;
-  void setAdminUrl(const std::string& adminUrl);
+  const std::string& getExpires() const;
+  void setExpires(const std::string& expires);
   const std::string& getId() const;
   void setId(const std::string& id);
-  const std::string& getInternalUrl() const;
-  void setInternalUrl(const std::string& internalUrl);
-  const std::string& getPublicUrl() const;
-  void setPublicUrl(const std::string& publicUrl);
-  const std::string& getRegion() const;
-  void setRegion(const std::string& region);
+  const std::string& getIssuedAt() const;
+  void setIssuedAt(const std::string& issuedAt);
+  Tenant* getTenant() const;
+  void setTenant(Tenant* tenant);
+  Token & operator=(const Token &other);
 };
 
 } /* namespace Swift */
-#endif /* ENDPOINT_H_ */
+#endif /* TOKEN_H_ */

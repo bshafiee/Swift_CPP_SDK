@@ -1,9 +1,9 @@
 #CXXFLAGS =	-O3 -Wall -fmessage-length=0 -std=c++11
-CXXFLAGS = -ggdb -g -Wall -fmessage-length=0 -std=c++11
+CXXFLAGS = -fPIC -g -O3 -Wall -fmessage-length=0 -std=c++11
 CFLAGS = -Wno-address -Wno-char-subscripts # -Wno-sign-compare
 
-SWIFT=$(wildcard interface/*.cpp io/*.cpp utils/jsoncpp/*.cpp model/*.cpp header/*.cpp)
-LIBSWIFTHEADERS=$(wildcard interface/*.h io/*.h model/*.h header/*.h)
+SWIFT=$(wildcard src/*.cpp)
+LIBSWIFTHEADERS=$(wildcard src/*.h)
 TEST=test.cpp
 CXXSOURCES=$(SWIFT)
 TESTSOURCES=$(TEST)
@@ -13,40 +13,43 @@ CXXOBJS=$(CXXSOURCES:%.cpp=%.o)
 TESTOBJS=$(TESTSOURCES:%.cpp=%.o)
 #COBJS=$(CSOURCES:%.c=%.o)
 
-#Includes
-LFLAGS=-Iutils/jsoncpp -Iheader -Iinterface -Iio -Imodel
-CXXFLAGS+= $(LFLAGS)
+#build dir
+BUILDDIR=build
 
 #Libraries
-#LD = -static -LUtils/poco/lib
-LD =
-CXXFLAGS+=$(LD)
+LDFLAGS = -shared
 
 LIBS =-lPocoUtild -lPocoUtil -lPocoXML -lPocoNet -lPocoNetd -lPocoFoundation -lPocoXMLd -lPocoFoundationd -lpthread
 
 
 TARGET =	SwiftSDK
-LIBSWIFT = libSwift.a
+LIBSWIFT = $(BUILDDIR)/libSwift.so
 
 #CXX=clang++
 all: $(LIBSWIFT) $(TARGET)
 
-$(LIBSWIFT): $(CXXOBJS)
-	ar rcs $@ $^
-	mkdir -p build/libSwift/include/swift
-	mkdir -p build/libSwift/lib
-	mv -f $(LIBSWIFT) build/libSwift/lib
-	cp -rf $(LIBSWIFTHEADERS) build/libSwift/include/swift
-	mkdir -p build/json
-	cp -rf utils/jsoncpp/json build/json
+$(LIBSWIFT) : $(CXXOBJS)
+	mkdir -p $(BUILDDIR)
+	mkdir -p $(BUILDDIR)/include/Swift
+	$(CXX) $(CXXFLAGS) $(CXXOBJS) -o $@ $(LDFLAGS) $(LIBS)
+	cp -rf $(LIBSWIFTHEADERS) $(BUILDDIR)/include/Swift
 
 $(TARGET):	$(CXXOBJS) $(COBJS) $(TESTOBJS)
 #	$(CXX) -o $(TARGET) $(CXXOBJS) $(LIBS) $(COBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(CXXOBJS) $(TESTOBJS) $(LIBS)
+
+install:
+	cp -r $(BUILDDIR)/include/Swift /usr/local/include
+	cp $(LIBSWIFT) /usr/local/lib
+	
+uninstall:
+	rm -rf /usr/local/include/Swift
+	rm -f /usr/local/lib/libSwift.so
+	ldconfig
 
 #$(COBJS): %.o: %.c
 #	$(CC) $(CFLAGS) -c $< -o $@
 
 
 clean:
-	rm -rf $(CXXOBJS) $(TARGET) $(TESTOBJS) $(LIBSWIFT) $(wildcard build/*)
+	rm -rf $(CXXOBJS) $(TARGET) $(TESTOBJS) $(LIBSWIFT) $(wildcard build/*) $(BUILDDIR)

@@ -17,37 +17,38 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-#ifndef TENANT_H_
-#define TENANT_H_
+#ifndef ENDPOINT_H_
+#define ENDPOINT_H_
 
 #include <iostream>
-#include <json/json.h>
+#include "json.h"
 
 namespace Swift {
 
-class Tenant {
-private:
+class Endpoint {
+  std::string adminURL;
   std::string id;
-  std::string name;
-  std::string description;
-  bool enabled;
+  std::string internalURL;
+  std::string publicURL;
+  std::string region;
 
 public:
-  Tenant();
-  Tenant(const std::string &_id, const std::string &_name, const std::string &_description, bool _enabled);
-  virtual ~Tenant();
-  static Tenant* fromJSON(const Json::Value &val);
-  static Json::Value* toJSON(const Tenant &instance);
-  //Getters and Setters
-  const std::string& getDescription() const;
-  void setDescription(const std::string& description);
-  bool isEnabled() const;
-  void setEnabled(bool enabled);
+  Endpoint();
+  virtual ~Endpoint();
+  static Endpoint* fromJSON(const Json::Value &val);
+  static Json::Value* toJSON(const Endpoint& instance);
+  //Getter Setters
+  const std::string& getAdminUrl() const;
+  void setAdminUrl(const std::string& adminUrl);
   const std::string& getId() const;
   void setId(const std::string& id);
-  const std::string& getName() const;
-  void setName(const std::string& name);
+  const std::string& getInternalUrl() const;
+  void setInternalUrl(const std::string& internalUrl);
+  const std::string& getPublicUrl() const;
+  void setPublicUrl(const std::string& publicUrl);
+  const std::string& getRegion() const;
+  void setRegion(const std::string& region);
 };
 
 } /* namespace Swift */
-#endif /* TENANT_H_ */
+#endif /* ENDPOINT_H_ */

@@ -17,10 +17,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 #include <iostream>
-#include "io/HTTPIO.h"
-#include "model/Account.h"
-#include "model/Container.h"
-#include "model/Object.h"
+#include "src/HTTPIO.h"
+#include "src/Account.h"
+#include "src/Container.h"
+#include "src/Object.h"
 #include <sstream>
 #include <cstring>
 #include <climits>

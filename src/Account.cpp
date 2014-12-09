@@ -19,7 +19,7 @@
 
 #include "Account.h"
 #include "Container.h"
-#include "../io/HTTPIO.h"
+#include "HTTPIO.h"
 #include <Poco/Exception.h>
 #include <sstream>
 using namespace std;

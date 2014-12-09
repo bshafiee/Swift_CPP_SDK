@@ -21,8 +21,8 @@
 #define SERVICE_H_
 
 #include <iostream>
-#include <json/json.h>
-#include <Endpoint.h>
+#include "json.h"
+#include "Endpoint.h"
 
 namespace Swift {
 /**

@@ -31,9 +31,9 @@
 #include <Poco/URI.h>
 #include <iostream>
 #include <vector>
-#include <Header.h>
-#include <SwiftResult.h>
-#include <Account.h>
+#include "Header.h"
+#include "SwiftResult.h"
+#include "Account.h"
 
 namespace Swift {
 

@@ -16,39 +16,38 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
-#ifndef TOKEN_H_
-#define TOKEN_H_
+
+#ifndef TENANT_H_
+#define TENANT_H_
 
 #include <iostream>
-#include <Tenant.h>
-#include <json/json.h>
+#include "json.h"
 
 namespace Swift {
 
-class Token {
+class Tenant {
 private:
-  std::string expires;
   std::string id;
-  std::string issued_at;
-  Tenant *tenant;
+  std::string name;
+  std::string description;
+  bool enabled;
 
 public:
-  Token();
-  Token(const std::string &_expires,const std::string &id,const std::string &issued_at,Tenant *tenant);
-  virtual ~Token();
-  static Token* fromJSON(const Json::Value &val);
-  static Json::Value* toJSON(const Token& instance);
-  //Getter Setters
-  const std::string& getExpires() const;
-  void setExpires(const std::string& expires);
+  Tenant();
+  Tenant(const std::string &_id, const std::string &_name, const std::string &_description, bool _enabled);
+  virtual ~Tenant();
+  static Tenant* fromJSON(const Json::Value &val);
+  static Json::Value* toJSON(const Tenant &instance);
+  //Getters and Setters
+  const std::string& getDescription() const;
+  void setDescription(const std::string& description);
+  bool isEnabled() const;
+  void setEnabled(bool enabled);
   const std::string& getId() const;
   void setId(const std::string& id);
-  const std::string& getIssuedAt() const;
-  void setIssuedAt(const std::string& issuedAt);
-  Tenant* getTenant() const;
-  void setTenant(Tenant* tenant);
-  Token & operator=(const Token &other);
+  const std::string& getName() const;
+  void setName(const std::string& name);
 };
 
 } /* namespace Swift */
-#endif /* TOKEN_H_ */
+#endif /* TENANT_H_ */
