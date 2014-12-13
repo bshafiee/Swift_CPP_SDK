@@ -20,6 +20,7 @@
 #include "HTTPIO.h"
 #include <sstream>
 #include <mutex>
+#include "Logger.h"
 
 namespace Swift {
 
@@ -250,10 +251,10 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     }
 
   if (!valid) {
-  	cout<<"Invalid Return code:";
-    httpResponse->write(cout);
+  	Logger::DEBUG()<<"Invalid Return code:";
+    httpResponse->write(Logger::DEBUG());
     if(httpResponse->getStatus() == 200)
-    	cerr<<"bullshit"<<endl;
+      Logger::ERROR()<<"bullshit"<<endl;
     if(httpResponse->getStatus() == HTTPResponse::HTTP_UNAUTHORIZED) {
       if(_account->reAuthenticate()) {
         delete httpSession;httpSession = nullptr;
