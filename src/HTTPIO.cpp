@@ -265,7 +265,7 @@ SwiftResult<T>* doSwiftTransaction(Account *_account, std::string &_uriPath,
     }
     SwiftResult<T> *result = new SwiftResult<T>();
     string errorText = "Code:";
-    errorText+= httpResponse->getStatus()+"\tReason:"+httpResponse->getReason();
+    errorText+= to_string(httpResponse->getStatus())+"\tReason:"+httpResponse->getReason();
     SwiftError error(SwiftError::SWIFT_HTTP_ERROR, errorText);
     result->setError(error);
     result->setSession(httpSession);

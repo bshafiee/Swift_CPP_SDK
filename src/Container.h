@@ -29,6 +29,10 @@ class Object;
 class Container {
   Account* account;
   std::string name;
+  uint64_t bytes;
+  uint64_t totalObjects;
+
+
 public:
   Container(Account *_account, std::string _name = "");
   virtual ~Container();
@@ -109,6 +113,11 @@ public:
   Account* getAccount();
   std::string& getName();
   void setName(const std::string& name);
+
+  uint64_t getBytesUsed() const;
+  void setBytesUsed(uint64_t bytesUsed);
+  uint64_t getTotalObjects() const;
+  void setTotalObjects(uint64_t totalObjects);
 };
 
 } /* namespace Swift */

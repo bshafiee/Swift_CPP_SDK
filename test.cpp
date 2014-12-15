@@ -38,10 +38,10 @@ struct membuf: std::streambuf {
 
 int main(int argc, char** argv) {
   AuthenticationInfo info;
-  info.username = "behrooz";
+  info.username = "admin";
   info.password = "behrooz";
   info.authUrl = "http://10.42.0.83:5000/v2.0/tokens";
-  info.tenantName = "kos";
+  info.tenantName = "admin";
   info.method = AuthenticationMethod::KEYSTONE;
 
   //Account Test cases

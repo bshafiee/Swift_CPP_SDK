@@ -306,4 +306,23 @@ SwiftResult<int*>* Container::swiftShowMetadata(bool _newest) {
       nullptr, &_reqMap, &validHTTPCodes, nullptr, 0, nullptr);
 }
 
+
+uint64_t Container::getBytesUsed() const{
+  return bytes;
+}
+
+void Container::setBytesUsed(uint64_t bytes) {
+  this->bytes = bytes;
+}
+
+uint64_t Container::getTotalObjects() const {
+  return this->totalObjects;
+}
+
+void Container::setTotalObjects(uint64_t totalObjects) {
+  this->totalObjects = totalObjects;
+}
+
 } /* namespace Swift */
+
+

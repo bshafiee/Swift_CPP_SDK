@@ -419,7 +419,13 @@ SwiftResult<vector<Container>*>* Account::swiftGetContainers(bool _newest) {
   //Successful parse
   for(uint i=0;i<root.size();i++) {
     string name = root[i].get("name","").asString();
+    string count = root[i].get("count","").asString();
+    string bytes = root[i].get("bytes","").asString();
+
     Container container(this,name);
+    container.setBytesUsed(stoul(bytes));
+    container.setTotalObjects(stoul(count));
+
     containers->push_back(container);
   }
 
