@@ -71,8 +71,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
 
   //write request body
   ostream &ostream = session->sendRequest(request);
-  if (ostream == nullptr)
-    return nullptr;
+
   ostream << reqBody;
   return session;
 }
@@ -100,8 +99,7 @@ Poco::Net::HTTPClientSession* doHTTPIO(const Poco::URI& uri,
 
   //write request body
   ostream &ostream = session->sendRequest(request);
-  if (ostream == nullptr)
-    return nullptr;
+
   ostream << reqBody;
   return session;
 }
